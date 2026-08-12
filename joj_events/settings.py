@@ -20,12 +20,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     
     # Librairies tierces
     'corsheaders',
     
     # Applications JOJ_EVENT
-    'utilisateurs',   # Assurez-vous d'avoir créé cette app avec startapp
+    'utilisateurs',   
     'evenements',
     'actualites',
     'paiements',
