@@ -17,7 +17,8 @@ urlpatterns = [
     # Tous les endpoints d'authentification
     path('api/auth/', include('authentification.urls')),
 
-    path('api/', include('evenements.urls')), 
+    path('api/', include('evenements.urls')),
+    path('api/', include('paiements.urls')),
 
 ]
 
