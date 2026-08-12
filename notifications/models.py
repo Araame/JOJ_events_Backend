@@ -5,7 +5,7 @@ class StatutNotification(models.TextChoices):
     NON_LU = 'NON_LU', 'Non lu'
 
 class Notification(models.Model):
-    spectateur = models.ForeignKey('paiements.Spectateur', on_delete=models.CASCADE, related_name='notifications')
+    transaction = models.ForeignKey('paiements.Transaction', on_delete=models.CASCADE, related_name='notifications', null=True, blank=True)
     objet = models.CharField(max_length=255)
     contenu = models.TextField()
     date = models.DateField(auto_now_add=True)
