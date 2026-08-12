@@ -12,6 +12,8 @@ class SiteViewSet(viewsets.ModelViewSet):
     pagination_class = SitePagination
 
 
+
+
 class ZoneViewSet(viewsets.ModelViewSet):
     """ModelViewSet pour Zone"""
     
