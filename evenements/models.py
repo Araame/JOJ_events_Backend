@@ -49,5 +49,5 @@ class Evenement(models.Model):
 class Resultat(models.Model):
     evenement = models.OneToOneField(Evenement, on_delete=models.CASCADE, related_name='resultat')
     score = models.CharField(max_length=255)
-    createur = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    createur = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,  related_name='resultats_crees')
 
