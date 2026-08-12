@@ -23,9 +23,10 @@ INSTALLED_APPS = [
     
     # Librairies tierces
     'corsheaders',
+    'rest_framework',
     
     # Applications JOJ_EVENT
-    'utilisateurs',   # Assurez-vous d'avoir créé cette app avec startapp
+    'utilisateurs',   
     'evenements',
     'actualites',
     'paiements',
