@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     # Librairies tierces
     'corsheaders',
     'rest_framework',
+    'drf_yasg',
     
     # Applications JOJ_EVENT
     'utilisateurs',   
@@ -101,3 +102,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Configuration CORS
 CORS_ALLOW_ALL_ORIGINS = True
+
