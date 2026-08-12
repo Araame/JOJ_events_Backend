@@ -20,6 +20,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_filters',
+    
     
     # Librairies tierces
     'corsheaders',
@@ -100,3 +102,9 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Configuration CORS
 CORS_ALLOW_ALL_ORIGINS = True
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
+}
