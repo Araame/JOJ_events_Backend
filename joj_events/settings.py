@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     
     # Librairies tierces
     'corsheaders',
+    'drf_yasg',
     
     # Applications JOJ_EVENT
     'utilisateurs',   

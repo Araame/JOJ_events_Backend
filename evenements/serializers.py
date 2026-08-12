@@ -62,7 +62,7 @@ class DisciplineSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Discipline
-        fields = ['id', 'nom', 'regle', 'accessibilite', 'categories', 'nombre_competiteurs']
+        fields = ['id', 'nom', 'regle', 'accessibilite', 'categories']
 
         def validate_nom(self, value):
             """ Unicité du nom et nettoyage des espaces """
