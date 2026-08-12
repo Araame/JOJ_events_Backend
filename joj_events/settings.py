@@ -25,10 +25,9 @@ INSTALLED_APPS = [
     
     # Librairies tierces
     'corsheaders',
-    'rest_framework',
     
     # Applications JOJ_EVENT
-    'utilisateurs',   # Assurez-vous d'avoir créé cette app avec startapp
+    'utilisateurs',   
     'evenements',
     'actualites',
     'paiements',
@@ -103,9 +102,3 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Configuration CORS
 CORS_ALLOW_ALL_ORIGINS = True
-
-REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ],
-}
