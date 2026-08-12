@@ -12,20 +12,11 @@ schema_view = get_schema_view(swagger_info,public=True,permission_classes=(permi
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-<<<<<<< HEAD
-<<<<<<< HEAD
+
     path("api-auth/", include("rest_framework.urls")),
-    path('api/', include('evenements.urls')),
-=======
     path('api/', include('evenements.urls')),  
     path("api-auth/", include("rest_framework.urls"))
->>>>>>> 125175b42cab4a2c099466af284e09eeae3365fb
 
-]
-
-
-=======
-    path("api-auth/", include("rest_framework.urls")),
 
     # Configuration urls pour application SITE
     path('', include('sites.urls')),
@@ -35,4 +26,3 @@ urlpatterns = [
 
     
 ]
->>>>>>> feature/apirest-sites
