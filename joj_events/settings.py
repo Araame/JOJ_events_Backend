@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'sites',
     'notifications',
     'corsheaders',
-    'restframework',
 
 ]
 
