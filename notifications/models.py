@@ -1,3 +1,16 @@
 from django.db import models
 
-# Create your models here.
+class StatutNotification(models.TextChoices):
+    LU = 'LU', 'Lu'
+    NON_LU = 'NON_LU', 'Non lu'
+
+class Notification(models.Model):
+    transaction = models.ForeignKey('paiements.Transaction', on_delete=models.CASCADE, related_name='notifications', null=True, blank=True)
+    objet = models.CharField(max_length=255)
+    contenu = models.TextField()
+    date = models.DateField(auto_now_add=True)
+    statut = models.CharField(
+        max_length=10, 
+        choices=StatutNotification.choices, 
+        default=StatutNotification.NON_LU
+    )
