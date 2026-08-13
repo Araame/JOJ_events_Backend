@@ -40,7 +40,6 @@ class EvenementAdmin(admin.ModelAdmin):
     list_display = ('titre', 'date', 'heure', 'site', 'categorie')
     list_filter = ('date', 'site', 'categorie')
     search_fields = ('titre',)
-    filter_horizontal = ('competiteurs',)
 
 
 @admin.register(Resultat)

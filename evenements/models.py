@@ -22,7 +22,7 @@ class Categorie(models.Model):
 
 class Competiteur(models.Model):
   categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE, related_name='competiteurs')
-  statut = models.CharField(max_length=100)
+  statut = models.BooleanField(default=True)
   pays = models.CharField(max_length=2, choices=Pays.choices, default=Pays.SENEGAL)
   image = models.ImageField(upload_to='competiteurs/',blank=True, null=True)
 
@@ -43,11 +43,11 @@ class Evenement(models.Model):
   categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE, related_name='evenements')
   description = models.TextField(blank=True)
   image = models.ImageField(upload_to='evenements/', blank=True, null=True)
-  competiteurs = models.ManyToManyField(Competiteur, related_name='evenements')
 
 
 class Resultat(models.Model):
-    evenement = models.OneToOneField(Evenement, on_delete=models.CASCADE, related_name='resultat')
+    evenement = models.ForeignKey(Evenement, on_delete=models.CASCADE, related_name='resultat')
     score = models.CharField(max_length=255)
     createur = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,  related_name='resultats_crees')
+    competiteur = models.ForeignKey(Competiteur, on_delete=models.CASCADE, blank=True, null=True)
 

@@ -24,6 +24,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+<<<<<<< HEAD
+=======
+    'rest_framework',
+    'django_filters',
+    
+    # Librairies tierces
+    'corsheaders',
+    'drf_yasg',
+    
+>>>>>>> a3dfc2bd001a1935858ed67a9203123782e0638e
     
 
     
@@ -34,13 +44,11 @@ INSTALLED_APPS = [
     'paiements',
     'sites',
     'notifications',
-    'corsheaders',
+
     'rest_framework_simplejwt',
-    'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
-    'authentification',
 
 ]
 
@@ -88,7 +96,8 @@ DATABASES = {
     }
 }
 
-# CONFIGURATION REST FRAMEWORK
+# joj_events/settings.py
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -98,7 +107,6 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
-
 
 # Configuration Spectacular (Swagger)
 SPECTACULAR_SETTINGS = {
