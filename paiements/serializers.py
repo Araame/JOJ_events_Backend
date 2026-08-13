@@ -105,17 +105,37 @@ class PaymentSerializer(serializers.ModelSerializer):
         )
 
 
+# Serializer pour payer plusieurs billets
 class PaymentCreateSerializer(serializers.Serializer):
     """
-    Initie le paiement d'un billet.
-    Le montant est calculé côté serveur — non modifiable par le client.
+    Initie le paiement de plusieurs billets (une commande).
+    Le montant total est calculé côté serveur — non modifiable par le client.
     """
-    billet = serializers.PrimaryKeyRelatedField(queryset=Billet.objects.all())
+    billets = serializers.ListField(
+        child=serializers.PrimaryKeyRelatedField(queryset=Billet.objects.all()),
+        min_length=1,
+        allow_empty=False
+    )
     methode = serializers.ChoiceField(choices=MethodePaiement.choices)
 
-    def validate_billet(self, billet):
-        if billet.statut != 'EN_ATTENTE':
-            raise serializers.ValidationError("Ce billet ne peut plus être payé.")
-        if hasattr(billet, 'payment'):
-            raise serializers.ValidationError("Un paiement existe déjà pour ce billet.")
-        return billet
+    def validate_billets(self, billets):
+        # Vérifier que tous les billets sont en attente
+        for billet in billets:
+            if billet.statut != 'EN_ATTENTE':
+                raise serializers.ValidationError(
+                    f"Le billet {billet.id} ne peut plus être payé (statut: {billet.statut})."
+                )
+            if hasattr(billet, 'payment'):
+                raise serializers.ValidationError(
+                    f"Un paiement existe déjà pour le billet {billet.id}."
+                )
+        
+        # Vérifier que tous les billets appartiennent au même spectateur
+        if billets:
+            spectateur = billets[0].spectateur
+            for billet in billets[1:]:
+                if billet.spectateur != spectateur:
+                    raise serializers.ValidationError(
+                        "Tous les billets doivent appartenir au même spectateur."
+                    )
+        return billets

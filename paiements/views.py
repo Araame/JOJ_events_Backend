@@ -3,8 +3,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from drf_spectacular.utils import extend_schema
-
-from .models import Billet, Payment, StatutPaiement, StatutBillet, PRIX_PAR_TYPE
+from .models import Billet, Payment, StatutPaiement, StatutBillet, PRIX_PAR_TYPE, Transaction
 from .serializers import (
     BilletSerializer, CommandeBilletSerializer, CommandeReponseSerializer,
     PaymentSerializer, PaymentCreateSerializer,
@@ -61,45 +60,64 @@ class PaymentCreateView(generics.CreateAPIView):
     @extend_schema(
         summary="Initier un paiement",
         description=(
-            "Initie le paiement d'un billet. Le montant est calculé côté serveur.\n\n"
-            "En cas de succès, le billet passe au statut VALIDÉ."
+            "Initie le paiement de plusieurs billets (une commande). Le montant total est calculé côté serveur.\n\n"
+            "En cas de succès, tous les billets passent au statut VALIDÉ."
         ),
         request=PaymentCreateSerializer,
-        responses={201: PaymentSerializer},
+        responses={201: PaymentSerializer(many=True)},
     )
     def post(self, request, *args, **kwargs):
         serializer = PaymentCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        billet = serializer.validated_data['billet']
+        billets = serializer.validated_data['billets']
         methode = serializer.validated_data['methode']
-        montant = PRIX_PAR_TYPE.get(billet.type_billet, 0)
+        
+        montant_total = sum(PRIX_PAR_TYPE.get(billet.type_billet, 0) for billet in billets)
+        spectateur = billets[0].spectateur
 
         with transaction.atomic():
             payment = Payment.objects.create(
-                billet=billet,
-                montant=montant,
+                billet=billets[0],
+                montant=montant_total,
                 methode=methode,
                 statut=StatutPaiement.EN_COURS,
             )
+            
             gateway = get_gateway()
             resultat = gateway.initier(
                 reference=str(payment.reference),
-                montant=float(montant),
+                montant=float(montant_total),
                 methode=methode,
             )
+            
             if resultat['succes']:
                 payment.statut = StatutPaiement.REUSSI
                 payment.reference_prestataire = resultat['reference_prestataire']
                 payment.save()
-                billet.statut = StatutBillet.VALIDE
-                billet.save()
+                
+                # Une seule transaction pour TOUS les billets
+                transaction_obj = Transaction.objects.create(
+                    numero_transaction=f"MOCK-{payment.reference}",
+                    mode_paiement=methode,
+                    montant=montant_total,
+                    telephone=spectateur.tel,
+                    date=payment.date_creation
+                )
+                
+                # Associer la même transaction à TOUS les billets
+                for billet in billets:
+                    billet.transaction = transaction_obj
+                    billet.statut = StatutBillet.VALIDE
+                    billet.save()
+                
             else:
                 payment.statut = StatutPaiement.ECHOUE
                 payment.save()
                 return Response({'erreur': resultat['message']}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(PaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
+        payments = Payment.objects.filter(billet__in=billets)
+        return Response(PaymentSerializer(payments, many=True).data, status=status.HTTP_201_CREATED)
 
 
 class PaymentDetailView(generics.RetrieveAPIView):

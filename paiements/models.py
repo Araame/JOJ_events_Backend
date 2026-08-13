@@ -77,11 +77,11 @@ class Billet(models.Model):
         on_delete=models.CASCADE,
         related_name='billets'
     )
-    transaction = models.OneToOneField(
+    transaction = models.ForeignKey(
         Transaction,
         on_delete=models.SET_NULL,
         null=True, blank=True,
-        related_name='billet'
+        related_name='billets' 
     )
     type_billet = models.CharField(max_length=20, choices=TypeBillet.choices, default=TypeBillet.STANDARD)
     statut = models.CharField(max_length=20, choices=StatutBillet.choices, default=StatutBillet.EN_ATTENTE)

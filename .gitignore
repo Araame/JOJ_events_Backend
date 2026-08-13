@@ -1,3 +1,17 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
+.env
+__pycache__/
+*.pyc
+db.sqlite3
+debug.log
+.venv/
+
+env
+venv
+=======
+=======
+>>>>>>> origin/feature/authentification
 # Python
 __pycache__/
 *.py[cod]
@@ -34,4 +48,8 @@ Thumbs.db
 # Migrations (optionnel - à commenter si vous voulez versionner les migrations)
 # */migrations/*.py
 # !*/migrations/__init__.py
+<<<<<<< HEAD
+>>>>>>> origin/feature/authentification
+=======
 
+>>>>>>> origin/feature/authentification
