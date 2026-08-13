@@ -1,33 +1,5 @@
-from django.shortcuts import render
-from rest_framework import viewsets
-from .models import Evenement
-from .serializers import EvenementSerializer
 
-from .eventFiltre import EventFiltre
-from django_filters.rest_framework import DjangoFilterBackend
-from .pagination import EvenementPagination
-from .permissions import IsAdminOrReadOnly
-
-class Evenements(viewsets.ModelViewSet):
-    queryset = Evenement.objects.all()
-    serializer_class = EvenementSerializer
-    
-    
-    permission_classes = [IsAdminOrReadOnly]
-    #systeme de filtrage
-    filter_backends = [DjangoFilterBackend]
-    # regle de filtrage
-    filterset_class = EventFiltre
-    #pagination
-    pagination_class = EvenementPagination
-
-
-
-
-        
-    
-    
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Discipline, Categorie
@@ -228,22 +200,17 @@ class DisciplineViewSet(viewsets.ModelViewSet):
         serializer = CategorieSerializer(categories, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], url_path='export',
-            permission_classes=[IsSuperadminPersonnel])
-    def export_disciplines(self, request):
-        """
-        Action réservée au SUPERADMIN : export complet des disciplines.
-        GET /api/disciplines/export/
-        """
-        disciplines = self.get_queryset()
-        serializer = DisciplineSerializer(disciplines, many=True)
-        return Response({
-            'total': disciplines.count(),
-            'disciplines': serializer.data,
-        })
+    def get_permissions(self):
+        """Toute action GET est publique, toute écriture exige l'authentification."""
+        if self.request.method in permissions.SAFE_METHODS:
+            permission_classes = [permissions.AllowAny]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
 
 
-class CategorieViewSet(viewsets.ModelViewSet):
+
+class CategorieViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API des catégories d'épreuves avec le même contrôle d'accès.
     - Lecture : publique
@@ -251,13 +218,15 @@ class CategorieViewSet(viewsets.ModelViewSet):
     """
     queryset = Categorie.objects.all().select_related('discipline')
     serializer_class = CategorieSerializer
-
-    # Filtrage par discipline
+    
+    # Filtrage par discipline 
     filterset_fields = ['discipline']
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            permission_classes = [IsAdminPersonnel]
-        else:
+        """Toute action GET est publique, toute écriture exige l'authentification."""
+        if self.request.method in permissions.SAFE_METHODS:
             permission_classes = [permissions.AllowAny]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
         return [permission() for permission in permission_classes]
+

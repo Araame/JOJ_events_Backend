@@ -142,6 +142,7 @@ class DisciplineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Discipline
         fields = ['id', 'nom', 'regle', 'accessibilite', 'categories']
+        fields = ['id', 'nom', 'regle', 'accessibilite', 'categories']
 
     def validate_nom(self, value):
         """ Unicité du nom et nettoyage des espaces """
@@ -161,23 +162,22 @@ class DisciplineSerializer(serializers.ModelSerializer):
 
     def validate_nom(self, value):
         """ Unicité du nom et nettoyage des espaces """
-        nom_nettoye = value.strip().lower()
+        nom_nettoye = value.strip()
+        
         if not nom_nettoye:
             raise serializers.ValidationError("Le nom de la discipline ne peut pas être vide")
 
         if len(nom_nettoye) > 100 or len(nom_nettoye) < 2:
-            raise serializers.ValidationError("Le nom de la discipline ne peut dépasser 100 caractères ou être inférieur à 2 caractères.")
+            raise serializers.ValidationError("Le nom de la discipline doit être compris entre 2 et 100 caractères.")
+
+        if not nom_nettoye[0].isalnum():
+            raise serializers.ValidationError("Le nom de la discipline doit commencer par une lettre ou un chiffre valide.")
 
         queryset = Discipline.objects.all()
         if self.instance:
             queryset = queryset.exclude(pk=self.instance.pk)
 
-        if queryset.filter(nom__iexact=value.strip()).exists():
-            raise serializers.ValidationError(f"Une discipline nommée '{value.strip()}' existe déjà.")
-
-        return value.strip()
-
         if queryset.filter(nom__iexact=nom_nettoye).exists():
             raise serializers.ValidationError(f"Une discipline nommée '{nom_nettoye}' existe déjà.")
 
-        return nom_nettoye
+        return nom_nettoye        
