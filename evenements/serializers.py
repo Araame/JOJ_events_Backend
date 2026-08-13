@@ -3,16 +3,15 @@ from rest_framework import serializers
 
 
 class EvenementSerializer(serializers.ModelSerializer):
-    discipline = serializers.CharField(
-        source = 'categorie.discipline.nom',
-        read_only = True),
-    site = serializers.CharField(
-        source = 'site.nom',
-        read_only = True
-    )
+    # discipline = serializers.CharField(
+    #     source = 'categorie.discipline.nom',
+    #     read_only = True),
+    # site = serializers.CharField(
+    #     source = 'site.nom',
+    # )
     class Meta:
         model = Evenement
-        fields = ['image','discipline','categorie','date','heure']
+        fields = ['titre','description','image','categorie','date','heure', 'site']
 
 
 class DetailEventSerializer(serializers.ModelSerializer):

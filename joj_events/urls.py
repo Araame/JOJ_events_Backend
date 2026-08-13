@@ -41,6 +41,5 @@ urlpatterns = [
     # Tous les endpoints d'authentification
     path('api/utilisateurs/', include('utilisateurs.urls')),
 
-    path('api/', include('evenements.urls')), 
 
 ]

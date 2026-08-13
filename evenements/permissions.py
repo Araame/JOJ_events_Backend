@@ -6,7 +6,7 @@ class IsAdminOrReadOnly(BasePermission):
         if request.method  in ['GET','HEAD','OPTIONS']:
             return True
         return(
-            request.user.Is_authenticated 
+            request.user.is_authenticated 
             and request.user.role in [RolePersonnel.ADMIN,RolePersonnel.SUPERADMIN]
         )
 

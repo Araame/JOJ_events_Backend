@@ -43,7 +43,6 @@ class Evenement(models.Model):
   categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE, related_name='evenements')
   description = models.TextField(blank=True)
   image = models.ImageField(upload_to='evenements/', blank=True, null=True)
-  competiteurs = models.ManyToManyField(Competiteur, related_name='evenements')
 
 
 class Resultat(models.Model):
