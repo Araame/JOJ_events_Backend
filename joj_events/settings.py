@@ -24,8 +24,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
-=======
     'rest_framework',
     'django_filters',
     
@@ -33,7 +31,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_yasg',
     
->>>>>>> a3dfc2bd001a1935858ed67a9203123782e0638e
     
 
     
@@ -131,6 +128,14 @@ SPECTACULAR_SETTINGS = {
         }
     },
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
 
 # CONFIGURATION JWT
