@@ -39,7 +39,7 @@ class CategorieSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Le nom de la catégorie ne peut pas être vide")
         
         queryset = Categorie.objects.all()
-        if self.isinstance:
+        if self.instance:
             queryset = queryset.exclude(pk=self.instance.pk)
 
         if queryset.filter(nom__iexact=nom_nettoye).exists():
@@ -64,26 +64,24 @@ class DisciplineSerializer(serializers.ModelSerializer):
         model = Discipline
         fields = ['id', 'nom', 'regle', 'accessibilite', 'categories']
 
-        def validate_nom(self, value):
-            """ Unicité du nom et nettoyage des espaces """
+    def validate_nom(self, value):
+        """ Unicité du nom et nettoyage des espaces """
+        nom_nettoye = value.strip()
+        
+        if not nom_nettoye:
+            raise serializers.ValidationError("Le nom de la discipline ne peut pas être vide")
 
-            nom_nettoye = value.strip().lower()
-            if not nom_nettoye:
-                raise  serializers.ValidationError("Le nom de la discipline ne peut pas être vide")
+        if len(nom_nettoye) > 100 or len(nom_nettoye) < 2:
+            raise serializers.ValidationError("Le nom de la discipline doit être compris entre 2 et 100 caractères.")
 
-            if len(nom_nettoye)>100 or len(nom_nettoye)<2:
-                raise serializers.ValidationError("Le nom de la discipline ne peut dépasser 100 caractères ou inférieur à 2 caractères.")
+        if not nom_nettoye[0].isalnum():
+            raise serializers.ValidationError("Le nom de la discipline doit commencer par une lettre ou un chiffre valide.")
 
-            if nom_nettoye[0].isalnum():
-                raise serializers.ValidationError("Veuillez entrer une discipline qui existante.")
+        queryset = Discipline.objects.all()
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
 
-            queryset = Discipline.objects.all()
-            if self.isinstance:
-              queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.filter(nom__iexact=nom_nettoye).exists():
+            raise serializers.ValidationError(f"Une discipline nommée '{nom_nettoye}' existe déjà.")
 
-            if queryset.filter(nom__iexact=value.strip()).exists():
-                raise serializers.ValidationError(f"Une discipline nommée '{value.strip()}' existe déjà. ")
-
-            return value.strip()
-
-
+        return nom_nettoye
