@@ -24,5 +24,8 @@ urlpatterns = [
     # Swagger UI
     path('swagger/', schema_view.with_ui('swagger'), name='swagger'),
 
+   
     
+
+   
 ]
