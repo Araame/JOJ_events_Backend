@@ -15,7 +15,7 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     
     # Tous les endpoints d'authentification
-    path('api/auth/', include('authentification.urls')),
+    path('api/utilisateurs/', include('utilisateurs.urls')),
 
     path('api/', include('evenements.urls')), 
 
