@@ -1,15 +1,15 @@
-# API d'Authentification JOJ Events
+# API JOJ Events - Backend
 
 ## Table des matières
 
 1. [Introduction](#introduction)
-2. [Technologies utilisees](#technologies-utilisees)
+2. [Technologies utilisées](#technologies-utilisées)
 3. [Installation](#installation)
 4. [Configuration](#configuration)
 5. [Structure du projet](#structure-du-projet)
 6. [Endpoints de l'API](#endpoints-de-lapi)
 7. [Gestion des tokens JWT](#gestion-des-tokens-jwt)
-8. [Systeme de roles](#systeme-de-roles)
+8. [Système de rôles](#système-de-rôles)
 9. [Documentation Swagger](#documentation-swagger)
 10. [Tests](#tests)
 11. [FAQ](#faq)
@@ -17,427 +17,466 @@
 
 ## Introduction
 
-L'API d'authentification de JOJ Events est un systeme complet de gestion des utilisateurs base sur Django REST Framework avec authentification JWT (JSON Web Tokens).
+JOJ Events Backend est une API complète pour la gestion des Jeux Olympiques de la Jeunesse. Elle couvre l'authentification JWT, la gestion des événements, des disciplines, des compétiteurs, des actualités, des sites, des paiements et des notifications.
 
-### Fonctionnalites principales
+### Fonctionnalités principales
 
-- Inscription des utilisateurs (Admin et SuperAdmin)
-- Connexion avec generation de tokens JWT
-- Rafraichissement des tokens
-- Deconnexion (blacklist des tokens)
-- Gestion du profil utilisateur
+- Authentification JWT (connexion, déconnexion, rafraîchissement de token)
+- Gestion des utilisateurs avec deux rôles : **Admin** et **SuperAdmin**
+- Création de comptes Admin et SuperAdmin (réservée aux SuperAdmins, sauf le premier)
+- Profil utilisateur : nom, prénom, email, téléphone
 - Changement de mot de passe
-- Gestion des roles (Admin/SuperAdmin)
-- Liste des utilisateurs (reserve SuperAdmin)
-- Revocation/reactivation des comptes (reserve SuperAdmin)
-- Documentation Swagger/OpenAPI
+- Révocation / réactivation de comptes Admin
+- Gestion des événements, disciplines, catégories et compétiteurs
+- Gestion des actualités, sites, paiements et notifications
+- Documentation interactive Swagger / ReDoc
 
 
-## Technologies utilisees
+## Technologies utilisées
 
-| Technologie | Version | Role |
-|-------------|---------|------|
-| Django | 6.0.3 | Framework Web principal |
-| Django REST Framework | 3.17.1 | Framework API REST |
-| djangorestframework-simplejwt | 5.3.1 | Authentification JWT |
-| django-cors-headers | 4.4.0 | Gestion CORS |
-| drf-spectacular | 0.27.2 | Documentation API |
-| mysqlclient | 2.2.8 | Driver MySQL |
+| Technologie | Version | Rôle |
+|---|---|---|
 | Python | 3.12+ | Langage de programmation |
+| Django | 5.x | Framework Web principal |
+| Django REST Framework | 3.x | Framework API REST |
+| djangorestframework-simplejwt | 5.x | Authentification JWT |
+| drf-spectacular | 0.27.x | Documentation OpenAPI / Swagger |
+| django-cors-headers | 4.x | Gestion CORS |
+| Pillow | — | Gestion des images (compétiteurs, événements) |
+| python-dotenv | — | Variables d'environnement |
 
 
 ## Installation
 
 ### Prérequis système
 
-Installez les dépendances système nécessaires :
 ```bash
-# Installer les dependances systeme
 sudo apt-get update
-sudo apt-get install -y pkg-config libmysqlclient-dev build-essential python3-dev
+sudo apt-get install -y pkg-config build-essential python3-dev
 sudo apt-get install -y libjpeg-dev zlib1g-dev libssl-dev
 ```
 
 ### Étapes d'installation
 
-1.  **Cloner le projet**
-    ```bash
-git clone <url-du-projet>
-cd JOJ_events_Backend
-```
+1. **Cloner le projet**
+   ```bash
+   git clone <url-du-projet>
+   cd JOJ_events_Backend
+   ```
 
-2.  **Créer l'environnement virtuel**
-    ```bash
-python -m venv .venv
-source .venv/bin/activate  # Sur Linux/Mac
-# .venv\Scripts\activate   # Sur Windows
-```
+2. **Créer l'environnement virtuel**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate   # Linux / Mac
+   # .venv\Scripts\activate    # Windows
+   ```
 
-3.  **Installer les dépendances**
-    ```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
+3. **Installer les dépendances**
+   ```bash
+   pip install --upgrade pip
+   pip install -r requirements.txt
+   ```
 
-4.  **Configurer la base de données**
-    ```bash
-# Creer les migrations
-python manage.py makemigrations
+4. **Configurer les variables d'environnement**
 
-# Appliquer les migrations
-python manage.py migrate
-```
+   Créer un fichier `.env` à la racine :
+   ```env
+   SECRET_KEY=votre_clé_secrète
+   DEBUG=True
+   DB_ENGINE=django.db.backends.sqlite3
+   DB_NAME=db.sqlite3
+   ```
 
-5.  **Créer le premier SuperAdmin**
+5. **Appliquer les migrations**
+   ```bash
+   python manage.py makemigrations
+   python manage.py migrate
+   ```
 
-    Via la commande Django admin :
-    ```bash
-# Via Django admin
-python manage.py createsuperuser
-```
-    OU via l'API (recommandé) :
-    ```bash
-curl -X POST http://localhost:8000/api/auth/creer-superadmin/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "superadmin",
-    "email": "superadmin@exemple.com",
-    "password": "Super123456",
-    "password2": "Super123456" }'
-```
+6. **Créer le premier SuperAdmin**
 
-6.  **Démarrer le serveur**
-    ```bash
-python manage.py runserver
-```
+   Via la commande Django :
+   ```bash
+   python manage.py createsuperuser
+   ```
+   Le rôle `SUPERADMIN` est attribué automatiquement à tout utilisateur `is_superuser=True`.
+
+   Ou via l'API (si aucun superadmin n'existe encore) :
+   ```bash
+   curl -X POST http://localhost:8000/api/auth/creer-superadmin/ \
+     -H "Content-Type: application/json" \
+     -d '{
+       "username": "superadmin",
+       "email": "superadmin@exemple.com",
+       "first_name": "Prénom",
+       "last_name": "Nom",
+       "tel": "771234567",
+       "password": "Super123456",
+       "password2": "Super123456"
+     }'
+   ```
+
+7. **Démarrer le serveur**
+   ```bash
+   python manage.py runserver
+   ```
+
 
 ## Configuration
 
-### Fichier `settings.py`
+### Variables d'environnement (`.env`)
 
-Les principales configurations se trouvent dans joj_events/settings.py :
+```env
+SECRET_KEY=votre_clé_secrète_django
+DEBUG=True
+DB_ENGINE=django.db.backends.sqlite3   # ou postgresql
+DB_NAME=db.sqlite3
+DB_USER=
+DB_PASSWORD=
+DB_HOST=localhost
+DB_PORT=5432
+```
 
-#### Applications installées
+### Applications installées
+
 ```python
 INSTALLED_APPS = [
+    # Django
     'django.contrib.admin',
     'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    ...
+    # JOJ Events
+    'utilisateurs',      # Modèle utilisateur personnalisé (Personnel)
     'evenements',
     'actualites',
     'paiements',
     'sites',
     'notifications',
-    'corsheaders',
+    'authentification',  # Serializers, vues et URLs d'authentification
+    # Tiers
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'rest_framework.authtoken',
     'drf_spectacular',
-    'authentification',
+    'corsheaders',
 ]
 ```
-#### Configuration JWT
+
+### Modèle utilisateur personnalisé
+
+```python
+AUTH_USER_MODEL = 'utilisateurs.Personnel'
+```
+
+Le modèle `Personnel` étend `AbstractUser` avec :
+- `tel` : numéro de téléphone
+- `role` : `ADMIN` ou `SUPERADMIN` (synchronisé automatiquement avec `is_superuser`)
+
+La logique d'authentification (serializers, vues, URLs) est dans l'application `authentification`, qui importe le modèle via `get_user_model()`.
+
+### Configuration JWT
+
 ```python
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),      # Duree de vie du token d'acces
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),         # Duree de vie du token de rafraichissement
-    'ROTATE_REFRESH_TOKENS': True,                       # Rotation des refresh tokens
-    'BLACKLIST_AFTER_ROTATION': True,                    # Blacklist apres rotation
-    'UPDATE_LAST_LOGIN': True,                           # Mise a jour de la derniere connexion
-    'ALGORITHM': 'HS256',                                # Algorithme de signature
-    'SIGNING_KEY': SECRET_KEY,                           # Cle de signature
-    'AUTH_HEADER_TYPES': ('Bearer',),                    # Type de header
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+    'ALGORITHM': 'HS256',
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 ```
-#### Configuration REST Framework
-```python
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-}
-```
+
+
 ## Structure du projet
+
 ```text
 JOJ_events_Backend/
 │
 ├── manage.py
+├── requirements.txt
+├── .env                            # Variables d'environnement (non versionné)
 │
-├── joj_events/                    # Dossier de configuration
-│   ├── __init__.py
-│   ├── settings.py               # Configuration du projet
-│   ├── urls.py                   # URLs principales
+├── joj_events/                     # Configuration du projet
+│   ├── settings.py
+│   ├── urls.py
 │   └── wsgi.py
 │
-├── authentification/              # Application d'authentification
-│   ├── __init__.py
-│   ├── admin.py                  # Configuration admin
-│   ├── apps.py
-│   ├── models.py                 # Modele Utilisateur
-│   ├── serializers.py            # Serializers de donnees
-│   ├── urls.py                   # URLs de l'application
-│   ├── views.py                  # Vues de l'application
-│   └── tests.py                  # Tests
+├── utilisateurs/                   # Modèle utilisateur (source unique)
+│   ├── models.py                   # Personnel (AbstractUser + tel + role)
+│   └── admin.py                    # Admin Django : Personnel, Admin, Superadmin
 │
-├── evenements/                    # Application evenements
-├── actualites/                    # Application actualites
-├── paiements/                     # Application paiements
-├── sites/                         # Application sites
-├── notifications/                 # Application notifications
+├── authentification/               # Logique d'authentification
+│   ├── serializers.py              # CreerAdmin, CreerSuperAdmin, Profil, etc.
+│   ├── views.py                    # Vues API
+│   ├── urls.py                     # Routes /api/auth/
+│   └── admin.py
 │
-└── requirements.txt               # Dependances Python
+├── evenements/                     # Disciplines, catégories, compétiteurs, événements
+│   ├── models.py
+│   ├── serializers.py
+│   ├── views.py
+│   └── urls.py
+│
+├── actualites/                     # Actualités / news
+├── paiements/                      # Paiements
+├── sites/                          # Sites / lieux des épreuves
+└── notifications/                  # Notifications
 ```
+
+
 ## Endpoints de l'API
 
-Tous les endpoints sont accessibles sous le prefixe /api/auth/.
+Préfixe commun : `/api/auth/`
 
-### Points d'accès publics (sans authentification)
+### Endpoints publics (sans authentification)
 
-Methode	Endpoint	Description
-POST	/api/auth/connexion/	Connexion et obtention des tokens
-POST	/api/auth/inscription/	Inscription d'un nouvel utilisateur
-POST	/api/auth/creer-superadmin/	Creation du premier SuperAdmin
+| Méthode | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/connexion/` | Connexion — retourne access + refresh token |
+| POST | `/api/auth/rafraichir-token/` | Obtenir un nouvel access token |
+| POST | `/api/auth/verifier-token/` | Vérifier la validité d'un token |
+| POST | `/api/auth/creer-superadmin/` | Créer le premier SuperAdmin (libre) ou un autre (SuperAdmin requis) |
 
-### Points d'accès avec authentification JWT
+### Endpoints authentifiés
 
-#### Utilisateur
+| Méthode | Endpoint | Description |
+|---|---|---|
+| GET | `/api/auth/profil/` | Obtenir le profil de l'utilisateur connecté |
+| PUT | `/api/auth/profil/` | Modifier le profil (username, email, prénom, nom, téléphone) |
+| POST | `/api/auth/deconnexion/` | Invalider le refresh token |
+| PUT | `/api/auth/changer-mot-de-passe/` | Changer le mot de passe |
 
-Methode	Endpoint	Description
-GET	/api/auth/profil/	Obtenir le profil de l'utilisateur
-PUT	/api/auth/profil/	Modifier le profil
-POST	/api/auth/deconnexion/	Se deconnecter
-POST	/api/auth/changer-mot-de-passe/	Changer le mot de passe
-POST	/api/auth/rafraichir-token/	Rafraichir le token d'acces
-POST	/api/auth/verifier-token/	Verifier la validite d'un token
+### Endpoints SuperAdmin uniquement
 
-#### SuperAdmin uniquement
+| Méthode | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/creer-admin/` | Créer un nouvel administrateur |
+| GET | `/api/auth/utilisateurs/` | Lister tous les utilisateurs |
+| POST | `/api/auth/revoquer-acces/{id}/` | Désactiver le compte d'un admin |
+| POST | `/api/auth/reactiver-acces/{id}/` | Réactiver le compte d'un admin |
 
-Methode	Endpoint	Description
-GET	/api/auth/utilisateurs/	Lister tous les utilisateurs
-POST	/api/auth/creer-admin/	Creer un administrateur
-POST	/api/auth/revoquer-acces/{id}/	Revoquer l'acces d'un administrateur
-POST	/api/auth/reactiver-acces/{id}/	Reactiver l'acces d'un administrateur
+### Corps des requêtes de création
+
+**Créer un Admin ou SuperAdmin :**
+```json
+{
+  "username": "admin1",
+  "email": "admin1@exemple.com",
+  "first_name": "Prénom",
+  "last_name": "Nom",
+  "tel": "771234567",
+  "password": "Admin123456",
+  "password2": "Admin123456"
+}
+```
+
 
 ## Gestion des tokens JWT
 
-### Qu'est-ce qu'un token JWT ?
+### Types de tokens
 
-Un token JWT est un objet JSON signe qui contient des informations d'authentification.
-
-### Les différents types de tokens
-
-*   **Access Token**
-    *   **Durée de vie :** 60 minutes
-    *   **Utilisation :** Accéder aux endpoints protégés.
-    *   **Inclusion :** Dans le header `Authorization: Bearer <token>`.
-
-*   **Refresh Token**
-    *   **Durée de vie :** 7 jours
-    *   **Utilisation :** Obtenir un nouvel Access Token.
-    *   **Inclusion :** UNIQUEMENT dans le corps (`body`) des requêtes.
+| Token | Durée | Usage |
+|---|---|---|
+| Access token | 60 minutes | Header `Authorization: Bearer <token>` |
+| Refresh token | 7 jours | Body des requêtes de rafraîchissement |
 
 ### Flux d'authentification
-```text
-1. Connexion
-   │
-   ├── POST /api/auth/connexion/
-   │   Body: {username, password}
-   │
-   └── Reponse: {access, refresh}
-       
-2. Utilisation normale
-   │
-   └── Header: Authorization: Bearer [access_token]
-       
-3. Expiration (60 min)
-   │
-   └── 401 Unauthorized
-       
-4. Rafraichissement
-   │
-   ├── POST /api/auth/rafraichir-token/
-   │   Body: {refresh: [refresh_token]}
-   │
-   └── Reponse: Nouveau {access, refresh}
-       
-5. Deconnexion
-   │
-   └── POST /api/auth/deconnexion/
-       Body: {refresh: [refresh_token]}
+
 ```
-### Exemple de requêtes avec tokens
-1.  **Connexion**
-    ```bash
+1. Connexion
+   POST /api/auth/connexion/  →  { access, refresh }
+
+2. Appels API
+   Header: Authorization: Bearer <access_token>
+
+3. Token expiré (401)
+   POST /api/auth/rafraichir-token/  body: { refresh }  →  nouveau { access, refresh }
+
+4. Déconnexion
+   POST /api/auth/deconnexion/  body: { refresh }  →  token blacklisté
+```
+
+### Exemples cURL
+
+**Connexion**
+```bash
 curl -X POST http://localhost:8000/api/auth/connexion/ \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "Admin123456"}'
+  -d '{"username": "superadmin", "password": "Super123456"}'
+```
 
-# Reponse
-{
-  "access": "eyJhbGciOiJIUzI1NiIs...",
-  "refresh": "eyJhbGciOiJIUzI1NiIs..."
-}
-```
-2.  **Accès à un endpoint protégé**
-    ```bash
+**Accéder à un endpoint protégé**
+```bash
 curl -X GET http://localhost:8000/api/auth/profil/ \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
-3.  **Rafraîchir le token**
-    ```bash
+
+**Rafraîchir le token**
+```bash
 curl -X POST http://localhost:8000/api/auth/rafraichir-token/ \
   -H "Content-Type: application/json" \
-  -d '{"refresh": "eyJhbGciOiJIUzI1NiIs..."}'
+  -d '{"refresh": "<REFRESH_TOKEN>"}'
 ```
-4.  **Déconnexion**
-    ```bash
+
+**Déconnexion**
+```bash
 curl -X POST http://localhost:8000/api/auth/deconnexion/ \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
-  -d '{"refresh": "eyJhbGciOiJIUzI1NiIs..."}'
+  -d '{"refresh": "<REFRESH_TOKEN>"}'
 ```
-## Système de rôles
-### Les différents rôles
-Role	Permissions
-SuperAdmin	Acces total, peut creer des admins, lister tous les utilisateurs, revoquer/reactiver des comptes
-Admin	Peut se connecter, gerer son profil, changer son mot de passe
-Utilisateur	Par defaut, peut se connecter et gerer son profil
-### Gestion des permissions
-Exemple de vérification dans les vues :
-```python
-# Verifier si l'utilisateur est SuperAdmin
-if not request.user.is_superuser:
-    return Response(
-        {'erreur': 'Seul un superadmin peut effectuer cette action'},
-        status=status.HTTP_403_FORBIDDEN
-    )
-```
-### Création d'administrateurs
-Pour créer un admin (nécessite d'être SuperAdmin) :
+
+**Créer un admin (SuperAdmin requis)**
 ```bash
 curl -X POST http://localhost:8000/api/auth/creer-admin/ \
-  -H "Authorization: Bearer [ACCESS_TOKEN]" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "admin1",
     "email": "admin1@exemple.com",
+    "first_name": "Prénom",
+    "last_name": "Nom",
+    "tel": "771234567",
     "password": "Admin123456",
     "password2": "Admin123456"
   }'
 ```
+
+
+## Système de rôles
+
+### Rôles disponibles
+
+| Rôle | Valeur | Permissions |
+|---|---|---|
+| SuperAdmin | `SUPERADMIN` | Accès total : créer admins, lister utilisateurs, révoquer/réactiver comptes |
+| Admin | `ADMIN` | Connexion, gestion du profil, changement de mot de passe |
+
+### Règles de gestion des rôles
+
+- Le rôle est stocké dans le champ `role` du modèle `Personnel`
+- Tout utilisateur avec `is_superuser=True` reçoit automatiquement `role=SUPERADMIN` via `save()`
+- Les superusers créés via `createsuperuser` ou Django Admin sont donc automatiquement `SUPERADMIN`
+- Un SuperAdmin ne peut pas être révoqué par un autre SuperAdmin
+- L'endpoint `creer-superadmin` est libre uniquement si aucun SuperAdmin n'existe encore
+
+### Vérification dans le code
+
+```python
+if not request.user.is_superuser:
+    return Response({'erreur': 'Accès réservé aux superadmins'}, status=403)
+```
+
+
 ## Documentation Swagger
-### Accès à la documentation
-*   **Swagger UI :** http://localhost:8000/api/docs/
-*   **ReDoc :** http://localhost:8000/api/redoc/
-*   **Schema OpenAPI :** http://localhost:8000/api/schema/
 
-### Utilisation de Swagger pour tester l'API
-Ouvre http://localhost:8000/api/docs/ dans ton navigateur
+- **Swagger UI :** http://localhost:8000/api/docs/
+- **ReDoc :** http://localhost:8000/api/redoc/
+- **Schéma OpenAPI :** http://localhost:8000/api/schema/
 
-Pour les endpoints proteges, clique sur "Authorize" en haut a droite
+### Authentification dans Swagger
 
-Entre le token : Bearer [VOTRE_ACCESS_TOKEN]
+1. Ouvre http://localhost:8000/api/docs/
+2. Utilise `POST /api/auth/connexion/` pour obtenir un access token
+3. Clique sur le bouton **Authorize** (cadenas en haut à droite)
+4. Colle le token dans le champ — format : `Bearer <ton_token>`
+5. Clique sur **Authorize** — tous les endpoints protégés sont maintenant accessibles
 
-Clique sur "Authorize"
 
-Teste les differents endpoints directement depuis l'interface
+## Tests
 
-Tests
-Tester avec cURL
-1. Connexion
-bash
-curl -X POST http://localhost:8000/api/auth/connexion/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "superadmin",
-    "password": "Super123456"
-  }'
-2. Obtenir le profil
-bash
-curl -X GET http://localhost:8000/api/auth/profil/ \
-  -H "Authorization: Bearer [ACCESS_TOKEN]"
-3. Changer le mot de passe
-bash
-curl -X PUT http://localhost:8000/api/auth/changer-mot-de-passe/ \
-  -H "Authorization: Bearer [ACCESS_TOKEN]" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "ancien_mot_de_passe": "Super123456",
-    "nouveau_mot_de_passe": "Nouveau123456",
-    "confirmation_nouveau_mot_de_passe": "Nouveau123456"
-  }'
-4. Lister tous les utilisateurs (SuperAdmin uniquement)
-bash
+**Lister les utilisateurs (SuperAdmin)**
+```bash
 curl -X GET http://localhost:8000/api/auth/utilisateurs/ \
-  -H "Authorization: Bearer [ACCESS_TOKEN]"
-5. Revoquer l'acces d'un admin (SuperAdmin uniquement)
-bash
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+**Changer le mot de passe**
+```bash
+curl -X PUT http://localhost:8000/api/auth/changer-mot-de-passe/ \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "ancien_mot_de_passe": "Ancien123",
+    "nouveau_mot_de_passe": "Nouveau123",
+    "confirmation_nouveau_mot_de_passe": "Nouveau123"
+  }'
+```
+
+**Révoquer l'accès d'un admin**
+```bash
 curl -X POST http://localhost:8000/api/auth/revoquer-acces/2/ \
-  -H "Authorization: Bearer [ACCESS_TOKEN]"
-6. Reactiver l'acces d'un admin (SuperAdmin uniquement)
-bash
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+**Réactiver l'accès d'un admin**
+```bash
 curl -X POST http://localhost:8000/api/auth/reactiver-acces/2/ \
-  -H "Authorization: Bearer [ACCESS_TOKEN]"
-FAQ
-Q: L'erreur "Authentication credentials were not provided"
-A: Tu n'as pas envoye le token dans le header. Utilise :
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
 
-text
-Authorization: Bearer [ACCESS_TOKEN]
-Q: L'erreur "Token has wrong type"
-A: Tu utilises un refresh token pour l'authentification. Utilise un access token dans le header Authorization.
 
-Q: La deconnexion ne fonctionne pas
-A: Assure-toi d'avoir active rest_framework_simplejwt.token_blacklist dans INSTALLED_APPS, puis applique les migrations.
+## FAQ
 
-Q: "Refresh token requis" dans la deconnexion
-A: Tu dois envoyer le refresh token dans le body de la requete :
+**"Authentication credentials were not provided"**
+Tu n'as pas envoyé le token. Utilise le header : `Authorization: Bearer <ACCESS_TOKEN>`
 
-json
-{
-  "refresh": "eyJhbGciOiJIUzI1NiIs..."
-}
-Q: Acces encore possible apres deconnexion
-A: C'est normal ! L'access token expire apres 60 minutes. La deconnexion invalide uniquement le refresh token.
+**"Token has wrong type"**
+Tu utilises un refresh token à la place d'un access token dans le header Authorization.
 
-Q: Comment changer la duree de vie des tokens ?
-A: Modifie les valeurs dans settings.py :
+**"Refresh token requis" lors de la déconnexion**
+Envoie le refresh token dans le body : `{"refresh": "<REFRESH_TOKEN>"}`
 
-python
+**L'accès reste possible après déconnexion**
+Normal. L'access token reste valide jusqu'à expiration (60 min). Seul le refresh token est blacklisté.
+
+**Le superuser créé via Django Admin a le rôle ADMIN**
+Cela concerne les comptes créés avant la mise en place de la synchronisation automatique. Corrige en base :
+```bash
+python manage.py shell -c "
+from django.contrib.auth import get_user_model
+get_user_model().objects.filter(is_superuser=True).update(role='SUPERADMIN', is_staff=True)
+"
+```
+
+**Comment voir les tokens blacklistés ?**
+Dans l'admin Django → section **Token Blacklist**.
+
+**Comment changer la durée de vie des tokens ?**
+Dans `settings.py` :
+```python
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
-Q: Comment voir les tokens blacklistes ?
-A: Va dans l'admin Django (`http://localhost:8000/admin/`) et regarde la section "Token Blacklist".
+```
+
 
 ## Maintenance
-### Mise à jour des dépendances
+
 ```bash
+# Mettre à jour les dépendances
 pip install --upgrade -r requirements.txt
-```
-### Sauvegarde de la base de données
-```bash
+
+# Sauvegarder la base de données
 python manage.py dumpdata > backup.json
-```
-### Restauration de la base de données
-```bash
+
+# Restaurer la base de données
 python manage.py loaddata backup.json
 ```
-## Sécurité
-*   Ne jamais partager le `SECRET_KEY`.
-*   Utiliser HTTPS en production.
-*   Changer la durée des tokens selon les besoins.
-*   Activer CORS uniquement pour les origines autorisées.
-*   Utiliser des mots de passe forts (minimum 8 caractères).
 
-## License
+
+## Sécurité
+
+- Ne jamais commiter le fichier `.env` ni la `SECRET_KEY`
+- Utiliser HTTPS en production
+- Restreindre `CORS_ALLOWED_ORIGINS` aux domaines autorisés en production
+- Désactiver `DEBUG=False` en production
+- Utiliser des mots de passe forts (minimum 8 caractères, majuscule, chiffre)
+
+
+## Licence
+
 Ce projet est sous licence MIT.

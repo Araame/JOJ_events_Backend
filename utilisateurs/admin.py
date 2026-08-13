@@ -21,6 +21,7 @@ class PersonnelAdmin(UserAdmin):
     )
     
     add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Informations personnelles', {'fields': ('first_name', 'last_name', 'email')}),
         ('Informations JOJ', {'fields': ('role', 'tel')}),
     )
 
@@ -66,6 +67,11 @@ class AdminProxyAdmin(UserAdmin):
     """
     list_display = ('get_username', 'get_email', 'get_prenom', 'get_nom')
 
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Informations personnelles', {'fields': ('first_name', 'last_name', 'email')}),
+        ('Informations JOJ', {'fields': ('role', 'tel')}),
+    )
+
     def get_username(self, obj):
         return obj.username
     get_username.short_description = "Nom d'utilisateur"
@@ -94,6 +100,11 @@ class SuperadminProxyAdmin(UserAdmin):
     Affiche uniquement les utilisateurs avec le rôle SUPERADMIN.
     """
     list_display = ('get_username', 'get_email', 'get_prenom', 'get_nom')
+
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Informations personnelles', {'fields': ('first_name', 'last_name', 'email')}),
+        ('Informations JOJ', {'fields': ('tel',)}),
+    )
 
     def get_username(self, obj):
         return obj.username

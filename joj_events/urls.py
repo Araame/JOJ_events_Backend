@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.urls import path
 from django.urls import path, include
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -28,4 +29,18 @@ urlpatterns = [
     
 
    
+    
+    # Documentation Swagger avec drf-spectacular
+    # path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    # path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    # path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    
+    # Interface de test DRF
+    path('api-auth/', include('rest_framework.urls')),
+    
+    # Tous les endpoints d'authentification
+    path('api/utilisateurs/', include('utilisateurs.urls')),
+
+    path('api/', include('evenements.urls')), 
+
 ]

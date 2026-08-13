@@ -139,7 +139,7 @@ class DisciplineSerializer(serializers.ModelSerializer):
     Serializer pour afficher une discipline avec ses catégories et le nombre de compétiteurs.
     """
     categories = CategorieSerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = Discipline
         fields = ['id', 'nom', 'regle', 'accessibilite', 'categories']
@@ -156,10 +156,27 @@ class DisciplineSerializer(serializers.ModelSerializer):
 
         if not nom_nettoye[0].isalnum():
             raise serializers.ValidationError("Le nom de la discipline doit commencer par une lettre ou un chiffre valide.")
+    def get_nombre_competiteurs(self, obj):
+        """ Compte le total des compétiteurs dans toutes les catégories de la discipline """
+        return sum(cat.competiteurs.count() for cat in obj.categories.all())
+
+    def validate_nom(self, value):
+        """ Unicité du nom et nettoyage des espaces """
+        nom_nettoye = value.strip().lower()
+        if not nom_nettoye:
+            raise serializers.ValidationError("Le nom de la discipline ne peut pas être vide")
+
+        if len(nom_nettoye) > 100 or len(nom_nettoye) < 2:
+            raise serializers.ValidationError("Le nom de la discipline ne peut dépasser 100 caractères ou être inférieur à 2 caractères.")
 
         queryset = Discipline.objects.all()
         if self.instance:
             queryset = queryset.exclude(pk=self.instance.pk)
+
+        if queryset.filter(nom__iexact=value.strip()).exists():
+            raise serializers.ValidationError(f"Une discipline nommée '{value.strip()}' existe déjà.")
+
+        return value.strip()
 
         if queryset.filter(nom__iexact=nom_nettoye).exists():
             raise serializers.ValidationError(f"Une discipline nommée '{nom_nettoye}' existe déjà.")
