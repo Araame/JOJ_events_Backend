@@ -5,7 +5,7 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
-
+from notifications import urls as notifications_urls
 # Creation de l'objet Info (pour le projet)
 swagger_info = openapi.Info(title="JOJ Events",default_version='v1',description="Documentation API pour les événements JOJ")
 
@@ -17,11 +17,8 @@ urlpatterns = [
 
     path("api-auth/", include("rest_framework.urls")),
     path('api/', include('evenements.urls')),  
-<<<<<<< HEAD
-=======
     # path("api-auth/", include("rest_framework.urls")),
     path('api/', include("actualites.urls")),
->>>>>>> origin/feature/actualites
 
 
     # Configuration urls pour application SITE

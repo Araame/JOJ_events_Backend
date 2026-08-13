@@ -23,6 +23,8 @@ db.sqlite3
 
 # Virtual Environment
 .venv/
+env
+
 
 # Django
 /media/
@@ -52,4 +54,8 @@ Thumbs.db
 >>>>>>> origin/feature/authentification
 =======
 
->>>>>>> origin/feature/authentification
+# Rapports de tests
+reports/
+htmlcov/
+.coverage
+.pytest_cache/>>>>>>> origin/feature/authentification
