@@ -1,4 +1,5 @@
-from rest_framework import viewsets
+
+from rest_framework import viewsets, permissions, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Discipline, Categorie
@@ -29,6 +30,16 @@ class DisciplineViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = CategorieSerializer(categories, many=True)
         return Response(serializer.data)
 
+    def get_permissions(self):
+        """Toute action GET est publique, toute écriture exige l'authentification."""
+        if self.request.method in permissions.SAFE_METHODS:
+            permission_classes = [permissions.AllowAny]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+
+
 class CategorieViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API publique en lecture seule pour consulter les catégories d'épreuves.
@@ -38,3 +49,12 @@ class CategorieViewSet(viewsets.ReadOnlyModelViewSet):
     
     # Filtrage par discipline 
     filterset_fields = ['discipline']
+
+    def get_permissions(self):
+        """Toute action GET est publique, toute écriture exige l'authentification."""
+        if self.request.method in permissions.SAFE_METHODS:
+            permission_classes = [permissions.AllowAny]
+        else:
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
+

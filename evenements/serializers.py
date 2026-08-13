@@ -38,11 +38,10 @@ class DisciplineSerializer(serializers.ModelSerializer):
     Serializer pour afficher une discipline avec ses catégories et le nombre de compétiteurs.
     """
     categories = CategorieSerializer(many=True, read_only=True)
-    nombre_competiteurs = serializers.SerializerMethodField()
 
     class Meta:
         model = Discipline
-        fields = ['id', 'nom', 'regle', 'accessibilite', 'categories', 'nombre_competiteurs']
+        fields = ['id', 'nom', 'regle', 'accessibilite', 'categories']
 
     def validate_nom(self, value):
         """ Unicité du nom et nettoyage des espaces """
