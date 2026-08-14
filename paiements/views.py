@@ -94,7 +94,10 @@ class PaymentCreateView(generics.CreateAPIView):
             if resultat['succes']:
                 payment.statut = StatutPaiement.REUSSI
                 payment.reference_prestataire = resultat['reference_prestataire']
-                payment.save()
+                payment.statut_mis_a_jour = True   # ← FLAG : transition intentionnelle
+                payment.save(update_fields=['statut', 'reference_prestataire'])
+                ...
+
                 
                 # Une seule transaction pour TOUS les billets
                 transaction_obj = Transaction.objects.create(
