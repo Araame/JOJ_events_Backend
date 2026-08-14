@@ -24,18 +24,25 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'django_filters',
+    
+    # Librairies tierces
+    'corsheaders',
+    'drf_yasg',
+    
+    
 
     
     # Applications JOJ_EVENT
-    'utilisateurs', 
+    'utilisateurs',   
     'evenements',
     'actualites',
     'paiements',
     'sites',
     'notifications',
-    'corsheaders',
+
     'rest_framework_simplejwt',
-    'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
@@ -86,7 +93,8 @@ DATABASES = {
     }
 }
 
-# CONFIGURATION REST FRAMEWORK
+# joj_events/settings.py
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -96,7 +104,6 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
-
 
 # Configuration Spectacular (Swagger)
 SPECTACULAR_SETTINGS = {
@@ -121,6 +128,14 @@ SPECTACULAR_SETTINGS = {
         }
     },
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
 
 # CONFIGURATION JWT
