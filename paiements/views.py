@@ -9,7 +9,9 @@ from .serializers import (
     PaymentSerializer, PaymentCreateSerializer,
 )
 from .gateway import get_gateway
-
+from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from utilisateurs.permissions import BilletsPermission, PaiementsPermission
 
 class BilletListCreateView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
@@ -54,14 +56,15 @@ class BilletDetailView(generics.RetrieveAPIView):
 
 
 class PaymentCreateView(generics.CreateAPIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [PaiementsPermission]
     serializer_class = PaymentCreateSerializer
 
     @extend_schema(
         summary="Initier un paiement",
         description=(
             "Initie le paiement de plusieurs billets (une commande). Le montant total est calculé côté serveur.\n\n"
-            "En cas de succès, tous les billets passent au statut VALIDÉ."
+            "En cas de succès, tous les billets passent au statut VALIDÉ.\n\n"
+            "Permission requise : PAIEMENTS"
         ),
         request=PaymentCreateSerializer,
         responses={201: PaymentSerializer(many=True)},
@@ -92,11 +95,6 @@ class PaymentCreateView(generics.CreateAPIView):
             )
             
             if resultat['succes']:
-                payment.statut = StatutPaiement.REUSSI
-                payment.reference_prestataire = resultat['reference_prestataire']
-                payment.save()
-                
-                # Une seule transaction pour TOUS les billets
                 transaction_obj = Transaction.objects.create(
                     numero_transaction=f"MOCK-{payment.reference}",
                     mode_paiement=methode,
@@ -104,12 +102,15 @@ class PaymentCreateView(generics.CreateAPIView):
                     telephone=spectateur.tel,
                     date=payment.date_creation
                 )
-                
-                # Associer la même transaction à TOUS les billets
+
                 for billet in billets:
                     billet.transaction = transaction_obj
                     billet.statut = StatutBillet.VALIDE
                     billet.save()
+
+                payment.statut = StatutPaiement.REUSSI
+                payment.reference_prestataire = resultat['reference_prestataire']
+                payment.save()
                 
             else:
                 payment.statut = StatutPaiement.ECHOUE
@@ -132,3 +133,24 @@ class PaymentDetailView(generics.RetrieveAPIView):
     )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
+
+# Nouvelle vue pour scanner le QR Code
+class ScannerBilletView(APIView):
+    permission_classes = [permissions.AllowAny]
+    
+    @extend_schema(
+        summary="Scanner un billet",
+        description="Permet de scanner un QR Code et d'obtenir les informations du billet.",
+        responses={200: BilletSerializer},
+    )
+    def get(self, request, code_unique):
+        billet = get_object_or_404(Billet, code_unique=code_unique)
+        
+        # Changer le statut si le billet est valide
+        if billet.statut == StatutBillet.VALIDE:
+            billet.statut = StatutBillet.UTILISE
+            billet.save()
+        
+        serializer = BilletSerializer(billet)
+        return Response(serializer.data, status=status.HTTP_200_OK)

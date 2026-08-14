@@ -1,11 +1,18 @@
 import uuid
+import qrcode
+from io import BytesIO
+from django.core.files import File
 from django.db import models
 
 
-class TypeBillet(models.TextChoices):
-    STANDARD = 'STANDARD', 'Standard'
-    VIP = 'VIP', 'VIP'
-    PRESSE = 'PRESSE', 'Presse'
+def get_type_billet_choices():
+    """Retourne les choix de types de billets depuis les zones de l'application sites."""
+    try:
+        from sites.models import Zone
+        noms = Zone.objects.values_list('nom', flat=True).distinct()
+        return [(nom, nom) for nom in noms]
+    except Exception:
+        return []
 
 
 class StatutBillet(models.TextChoices):
@@ -32,16 +39,18 @@ class MethodePaiement(models.TextChoices):
 
 # Prix par type de billet — calculé côté serveur uniquement
 PRIX_PAR_TYPE = {
-    TypeBillet.STANDARD: 5000,
-    TypeBillet.VIP: 15000,
-    TypeBillet.PRESSE: 0,
+    'STANDARD': 5000,
+    'VIP': 15000,
+    'PRESSE': 0,
 }
 
-ZONES_PAR_TYPE = {
-    TypeBillet.STANDARD: ['Tribune générale', 'Zone debout'],
-    TypeBillet.VIP: ['Tribune générale', 'Zone debout', 'Lounge VIP', 'Tribune VIP'],
-    TypeBillet.PRESSE: ['Tribune générale', 'Zone debout', 'Zone presse', 'Salle de conférence'],
-}
+def get_zones_pour_type(type_billet):
+    """
+    Retourne la liste des noms de zones accessibles pour un type de billet,
+    en lisant dynamiquement les zones de l'application sites.
+    """
+    from sites.models import Zone
+    return list(Zone.objects.filter(nom=type_billet).values_list('nom', flat=True))
 
 
 class Spectateur(models.Model):
@@ -83,12 +92,20 @@ class Billet(models.Model):
         null=True, blank=True,
         related_name='billets' 
     )
-    type_billet = models.CharField(max_length=20, choices=TypeBillet.choices, default=TypeBillet.STANDARD)
+    type_billet = models.CharField(max_length=100, choices=get_type_billet_choices)
     statut = models.CharField(max_length=20, choices=StatutBillet.choices, default=StatutBillet.EN_ATTENTE)
     code_unique = models.UUIDField(editable=False, unique=True, null=True, blank=True)
     zones_accessibles = models.JSONField(default=list)
     place = models.CharField(max_length=50, blank=True)
     date_commande = models.DateTimeField(auto_now_add=True)
+    
+    # Ajout du champ QR Code
+    qr_code = models.ImageField(
+        upload_to='qr_codes/',
+        blank=True,
+        null=True,
+        help_text="QR Code du billet"
+    )
 
     class Meta:
         ordering = ['-date_commande']
@@ -96,12 +113,48 @@ class Billet(models.Model):
     def __str__(self):
         return f"Billet {self.type_billet} — {self.evenement} [{self.statut}]"
 
+    def generate_qr_code(self):
+        """Génère un QR Code pour le billet."""
+        import json
+        qr_data = {
+            'billet_id': str(self.code_unique),
+            'evenement': self.evenement.titre if self.evenement else '',
+            'spectateur': f"{self.spectateur.prenom} {self.spectateur.nom}",
+            'type': self.type_billet,
+            'place': self.place,
+        }
+        
+        qr_text = json.dumps(qr_data)
+        
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(qr_text)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        
+        filename = f"qr_{self.code_unique}.png"
+        self.qr_code.save(filename, File(buffer), save=False)
+
     def save(self, *args, **kwargs):
         if not self.code_unique:
             self.code_unique = uuid.uuid4()
         if not self.pk and not self.zones_accessibles:
-            self.zones_accessibles = ZONES_PAR_TYPE.get(self.type_billet, [])
+            self.zones_accessibles = get_zones_pour_type(self.type_billet)
+        
         super().save(*args, **kwargs)
+        
+        # Générer le QR Code après la première sauvegarde
+        if not self.qr_code:
+            self.generate_qr_code()
+            # Use update_fields to avoid a duplicate INSERT on the same pk
+            super().save(update_fields=['qr_code'])
 
 
 class Payment(models.Model):

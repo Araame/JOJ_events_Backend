@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Billet, Spectateur, Transaction, TypeBillet, Payment, MethodePaiement, PRIX_PAR_TYPE
+from .models import Billet, Spectateur, Transaction, Payment, MethodePaiement, PRIX_PAR_TYPE, get_type_billet_choices
 from evenements.models import Evenement
 
 
@@ -13,25 +13,36 @@ class BilletSerializer(serializers.ModelSerializer):
     evenement_titre = serializers.CharField(source='evenement.titre', read_only=True)
     spectateur = SpectateurSerializer(read_only=True)
     prix_unitaire = serializers.SerializerMethodField()
+    qr_code_url = serializers.SerializerMethodField() 
 
     class Meta:
         model = Billet
         fields = (
             'id', 'code_unique', 'spectateur', 'evenement', 'evenement_titre',
             'type_billet', 'statut', 'zones_accessibles', 'place',
-            'prix_unitaire', 'date_commande',
+            'prix_unitaire', 'date_commande', 'qr_code', 'qr_code_url',
         )
         read_only_fields = fields
 
     def get_prix_unitaire(self, obj):
         return PRIX_PAR_TYPE.get(obj.type_billet, 0)
+    
+    def get_qr_code_url(self, obj):
+        if obj.qr_code and hasattr(obj.qr_code, 'url'):
+            return obj.qr_code.url
+        return None
 
 
 class LigneBilletSerializer(serializers.Serializer):
     """Une ligne : type de billet + quantité souhaitée."""
-    type_billet = serializers.ChoiceField(choices=TypeBillet.choices)
+    type_billet = serializers.ChoiceField(choices=get_type_billet_choices())
     quantite = serializers.IntegerField(min_value=1, max_value=10)
     place = serializers.CharField(max_length=50, required=False, allow_blank=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Rafraîchit les choix depuis la base à chaque instanciation
+        self.fields['type_billet'].choices = dict(get_type_billet_choices())
 
 
 class CommandeBilletSerializer(serializers.Serializer):
