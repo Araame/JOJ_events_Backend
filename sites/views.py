@@ -19,3 +19,5 @@ class ZoneViewSet(viewsets.ModelViewSet):
     
     queryset = Zone.objects.all()
     serializer_class = ZoneSerializer
+
+
