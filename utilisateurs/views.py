@@ -12,32 +12,28 @@ from .serializers import (
     UtilisateurSerializer,
     ChangerMotDePasseSerializer,
 )
+from .permissions import EstSuperAdmin
 
 Utilisateur = get_user_model()
 
 
 class CreerAdminView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, EstSuperAdmin]
     serializer_class = CreerAdminSerializer
 
     @extend_schema(
-        summary="Créer un administrateur",
-        description="Crée un nouvel administrateur. Réservé aux superadmins.",
+        summary="Creer un administrateur",
+        description="Cree un nouvel administrateur avec des permissions specifiques. Reserve aux superadmins.",
         request=CreerAdminSerializer,
         responses={201: UtilisateurSerializer},
     )
     def create(self, request, *args, **kwargs):
-        if not request.user.is_superuser:
-            return Response(
-                {'erreur': 'Seul un superadmin peut créer un administrateur'},
-                status=status.HTTP_403_FORBIDDEN
-            )
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         utilisateur = serializer.save()
         return Response({
             'utilisateur': UtilisateurSerializer(utilisateur).data,
-            'message': 'Administrateur créé avec succès'
+            'message': 'Administrateur cree avec succes'
         }, status=status.HTTP_201_CREATED)
 
 
@@ -46,10 +42,10 @@ class CreerSuperAdminView(generics.CreateAPIView):
     serializer_class = CreerSuperAdminSerializer
 
     @extend_schema(
-        summary="Créer un superadministrateur",
+        summary="Creer un superadministrateur",
         description=(
-            "Crée le premier superadmin librement. "
-            "Si un superadmin existe déjà, seul un superadmin connecté peut en créer un autre."
+            "Cree le premier superadmin librement. "
+            "Si un superadmin existe deja, seul un superadmin connecte peut en creer un autre."
         ),
         request=CreerSuperAdminSerializer,
         responses={201: UtilisateurSerializer},
@@ -58,7 +54,7 @@ class CreerSuperAdminView(generics.CreateAPIView):
         if Utilisateur.objects.filter(is_superuser=True).exists():
             if not request.user.is_authenticated or not request.user.is_superuser:
                 return Response(
-                    {'erreur': 'Vous devez être superadmin pour créer un autre superadmin'},
+                    {'erreur': 'Vous devez etre superadmin pour creer un autre superadmin'},
                     status=status.HTTP_403_FORBIDDEN
                 )
         serializer = self.get_serializer(data=request.data)
@@ -66,7 +62,7 @@ class CreerSuperAdminView(generics.CreateAPIView):
         utilisateur = serializer.save()
         return Response({
             'utilisateur': UtilisateurSerializer(utilisateur).data,
-            'message': 'Superadmin créé avec succès'
+            'message': 'Superadmin cree avec succes'
         }, status=status.HTTP_201_CREATED)
 
 
@@ -75,7 +71,7 @@ class ProfilUtilisateurView(APIView):
 
     @extend_schema(
         summary="Obtenir le profil",
-        description="Retourne les informations de l'utilisateur authentifié.",
+        description="Retourne les informations de l'utilisateur authentifie.",
         responses={200: UtilisateurSerializer},
     )
     def get(self, request):
@@ -83,8 +79,8 @@ class ProfilUtilisateurView(APIView):
         return Response(serializer.data)
 
     @extend_schema(
-        summary="Mettre à jour le profil",
-        description="Met à jour les informations de l'utilisateur (email, username).",
+        summary="Mettre a jour le profil",
+        description="Met a jour les informations de l'utilisateur (email, username).",
         request=UtilisateurSerializer,
         responses={200: UtilisateurSerializer},
     )
@@ -100,8 +96,8 @@ class DeconnexionView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
-        summary="Déconnexion",
-        description="Invalide le refresh token pour déconnecter l'utilisateur.",
+        summary="Deconnexion",
+        description="Invalide le refresh token pour deconnecter l'utilisateur.",
         request={"application/json": {
             "type": "object",
             "properties": {"refresh": {"type": "string"}},
@@ -116,7 +112,7 @@ class DeconnexionView(APIView):
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
-            return Response({'message': 'Déconnecté avec succès'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Deconnecte avec succes'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'erreur': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -126,7 +122,7 @@ class ChangerMotDePasseView(APIView):
 
     @extend_schema(
         summary="Changer le mot de passe",
-        description="Permet à l'utilisateur connecté de changer son mot de passe.",
+        description="Permet a l'utilisateur connecte de changer son mot de passe.",
         request=ChangerMotDePasseSerializer,
         responses={200: {"type": "object", "properties": {"message": {"type": "string"}}}},
     )
@@ -141,37 +137,30 @@ class ChangerMotDePasseView(APIView):
                 )
             utilisateur.set_password(serializer.validated_data['nouveau_mot_de_passe'])
             utilisateur.save()
-            return Response({'message': 'Mot de passe changé avec succès'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Mot de passe change avec succes'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ListeUtilisateursView(generics.ListAPIView):
-    """Liste tous les utilisateurs. Réservé aux superadmins."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, EstSuperAdmin]
     serializer_class = UtilisateurSerializer
     queryset = Utilisateur.objects.all().order_by('-date_joined')
 
     @extend_schema(
         summary="Lister les utilisateurs",
-        description="Retourne la liste de tous les utilisateurs. Réservé aux superadmins.",
+        description="Retourne la liste de tous les utilisateurs. Reserve aux superadmins.",
         responses={200: UtilisateurSerializer(many=True)},
     )
     def list(self, request, *args, **kwargs):
-        if not request.user.is_superuser:
-            return Response(
-                {'erreur': 'Seul un superadmin peut voir la liste des utilisateurs'},
-                status=status.HTTP_403_FORBIDDEN
-            )
         return super().list(request, *args, **kwargs)
 
 
 class RevoquerAccesView(APIView):
-    """Désactive un administrateur. Réservé aux superadmins."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, EstSuperAdmin]
 
     @extend_schema(
-        summary="Révoquer l'accès d'un administrateur",
-        description="Désactive le compte d'un administrateur. Réservé aux superadmins.",
+        summary="Revoquer l'acces d'un administrateur",
+        description="Desactive le compte d'un administrateur. Reserve aux superadmins.",
         responses={
             200: UtilisateurSerializer,
             403: {"type": "object", "properties": {"erreur": {"type": "string"}}},
@@ -179,36 +168,30 @@ class RevoquerAccesView(APIView):
         },
     )
     def post(self, request, utilisateur_id):
-        if not request.user.is_superuser:
-            return Response(
-                {'erreur': "Seul un superadmin peut révoquer l'accès d'un administrateur"},
-                status=status.HTTP_403_FORBIDDEN
-            )
         try:
             utilisateur = Utilisateur.objects.get(id=utilisateur_id)
         except Utilisateur.DoesNotExist:
-            return Response({'erreur': 'Utilisateur non trouvé'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'erreur': 'Utilisateur non trouve'}, status=status.HTTP_404_NOT_FOUND)
 
         if utilisateur.is_superuser:
             return Response(
-                {'erreur': "Impossible de révoquer l'accès d'un superadmin"},
+                {'erreur': "Impossible de revoquer l'acces d'un superadmin"},
                 status=status.HTTP_403_FORBIDDEN
             )
         utilisateur.is_active = False
         utilisateur.save()
         return Response({
-            'message': f'Accès révoqué pour {utilisateur.username}',
+            'message': f'Acces revoque pour {utilisateur.username}',
             'utilisateur': UtilisateurSerializer(utilisateur).data
         }, status=status.HTTP_200_OK)
 
 
 class ReactiverAccesView(APIView):
-    """Réactive un administrateur désactivé. Réservé aux superadmins."""
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, EstSuperAdmin]
 
     @extend_schema(
-        summary="Réactiver l'accès d'un administrateur",
-        description="Réactive le compte d'un administrateur désactivé. Réservé aux superadmins.",
+        summary="Reactiver l'acces d'un administrateur",
+        description="Reactive le compte d'un administrateur desactive. Reserve aux superadmins.",
         responses={
             200: UtilisateurSerializer,
             403: {"type": "object", "properties": {"erreur": {"type": "string"}}},
@@ -216,19 +199,14 @@ class ReactiverAccesView(APIView):
         },
     )
     def post(self, request, utilisateur_id):
-        if not request.user.is_superuser:
-            return Response(
-                {'erreur': "Seul un superadmin peut réactiver l'accès d'un administrateur"},
-                status=status.HTTP_403_FORBIDDEN
-            )
         try:
             utilisateur = Utilisateur.objects.get(id=utilisateur_id)
         except Utilisateur.DoesNotExist:
-            return Response({'erreur': 'Utilisateur non trouvé'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'erreur': 'Utilisateur non trouve'}, status=status.HTTP_404_NOT_FOUND)
 
         utilisateur.is_active = True
         utilisateur.save()
         return Response({
-            'message': f'Accès réactivé pour {utilisateur.username}',
+            'message': f'Acces reactive pour {utilisateur.username}',
             'utilisateur': UtilisateurSerializer(utilisateur).data
         }, status=status.HTTP_200_OK)

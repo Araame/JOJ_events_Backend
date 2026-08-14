@@ -1,12 +1,8 @@
 from rest_framework.routers import DefaultRouter
-
-
-
-from .views import DisciplineViewSet, CategorieViewSet, Evenements
+from .views import DisciplineViewSet, CategorieViewSet, Evenements, ResultatViewSet, JoueurViewSet, EquipeViewSet
 
 # evenements/urls.py
 from django.urls import path, include
-from .views import DisciplineViewSet, CategorieViewSet,  ResultatViewSet, JoueurViewSet, EquipeViewSet
 
 router = DefaultRouter()
 router.register(r'resultats', ResultatViewSet, basename='resultat')

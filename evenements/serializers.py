@@ -1,11 +1,7 @@
 from .models import Evenement
 from rest_framework import serializers
 
-
-
-
-# class DetailEventSerializer(serializers.ModelSerializer):
-# #serializer pour afficher la carte des events
+#serializer pour afficher la carte des events
 class EvenementListSerializer(serializers.ModelSerializer):
     discipline = serializers.CharField(
         source = 'categorie.discipline.nom',
@@ -147,7 +143,6 @@ class DisciplineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Discipline
         fields = ['id', 'nom', 'regle', 'accessibilite', 'categories']
-        fields = ['id', 'nom', 'regle', 'accessibilite', 'categories']
 
     def validate_nom(self, value):
         """ Unicité du nom et nettoyage des espaces """
@@ -161,6 +156,7 @@ class DisciplineSerializer(serializers.ModelSerializer):
 
         if not nom_nettoye[0].isalnum():
             raise serializers.ValidationError("Le nom de la discipline doit commencer par une lettre ou un chiffre valide.")
+    
     def get_nombre_competiteurs(self, obj):
         """ Compte le total des compétiteurs dans toutes les catégories de la discipline """
         return sum(cat.competiteurs.count() for cat in obj.categories.all())
@@ -185,4 +181,4 @@ class DisciplineSerializer(serializers.ModelSerializer):
         if queryset.filter(nom__iexact=nom_nettoye).exists():
             raise serializers.ValidationError(f"Une discipline nommée '{nom_nettoye}' existe déjà.")
 
-        return nom_nettoye        
+        return nom_nettoye
