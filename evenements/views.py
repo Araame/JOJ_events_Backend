@@ -20,12 +20,34 @@ from django.shortcuts import get_object_or_404
 from .models import Resultat, Evenement, Equipe,  Joueur
 from .serializers import ResultatSerializer, EquipeSerializer, JoueurSerializer
 
+# Importer EventFiltre et EvenementPagination
+from .eventFiltre import EventFiltre
+from .pagination import EvenementPagination
+
+# Importer les permissions personnalisees
+from utilisateurs.permissions import EvenementsPermission, DisciplinesPermission, CategoriesPermission
+
 
 # Critères d'acceptation
 # GET /api/résultats/ retourne la liste des résultats
 # GET /api/résultats/{id}/ retourne le détail
 # GET /api/résultats/{id}/équipe/ retourne les événements associés
 # Les données incluent évènement, dicipline, équipe si disponible
+
+# Permission manquante
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """
+    Permission personnalisée : 
+    - Les utilisateurs anonymes peuvent lire (GET, HEAD, OPTIONS)
+    - Seuls les administrateurs peuvent écrire (POST, PUT, DELETE)
+    """
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        if not request.user or not request.user.is_authenticated:
+            return False
+        return getattr(request.user, 'role', None) in ('ADMIN', 'SUPERADMIN')
+
 
 class EquipeViewSet(ModelViewSet):
     queryset= Equipe.objects.all()
@@ -69,6 +91,7 @@ class JoueurViewSet(ModelViewSet):
         else:
             permission_classes=[permissions.IsAdminUser]
         return[permission() for permission in permission_classes]        
+    
 class Evenements(viewsets.ModelViewSet):
     queryset = Evenement.objects.all()
     def get_serializer_class(self):
@@ -78,16 +101,20 @@ class Evenements(viewsets.ModelViewSet):
         # POST, GET détail, PUT, PATCH
         return EvenementSerializer
     
+    # Utiliser EvenementsPermission au lieu de IsAdminOrReadOnly
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [permissions.AllowAny]  # Lecture publique
+        else:
+            permission_classes = [EvenementsPermission]  
+        return [permission() for permission in permission_classes]
     
-    
-    permission_classes = [IsAdminOrReadOnly]
     #systeme de filtrage
     filter_backends = [DjangoFilterBackend]
     # regle de filtrage
     filterset_class = EventFiltre
     #pagination
     pagination_class = EvenementPagination
-        
         
 
 class ResultatViewSet(ModelViewSet):
@@ -205,7 +232,7 @@ class DisciplineViewSet(viewsets.ModelViewSet):
             permission_classes = [IsSuperadminPersonnel]
         # Toute action d'écriture exige un personnel authentifié
         elif self.action in ['create', 'update', 'partial_update', 'delete', 'destroy']:
-            permission_classes = [IsAdminPersonnel]
+            permission_classes = [DisciplinesPermission] 
         # La lecture (list, retrieve, categories) est publique
         else:
             permission_classes = [permissions.AllowAny]
@@ -222,15 +249,6 @@ class DisciplineViewSet(viewsets.ModelViewSet):
         categories = Categorie.objects.filter(discipline=discipline)
         serializer = CategorieSerializer(categories, many=True)
         return Response(serializer.data)
-
-    def get_permissions(self):
-        """Toute action GET est publique, toute écriture exige l'authentification."""
-        if self.request.method in permissions.SAFE_METHODS:
-            permission_classes = [permissions.AllowAny]
-        else:
-            permission_classes = [permissions.IsAuthenticated]
-        return [permission() for permission in permission_classes]
-
 
 
 class CategorieViewSet(viewsets.ReadOnlyModelViewSet):
@@ -250,6 +268,5 @@ class CategorieViewSet(viewsets.ReadOnlyModelViewSet):
         if self.request.method in permissions.SAFE_METHODS:
             permission_classes = [permissions.AllowAny]
         else:
-            permission_classes = [permissions.IsAuthenticated]
+            permission_classes = [CategoriesPermission]
         return [permission() for permission in permission_classes]
-

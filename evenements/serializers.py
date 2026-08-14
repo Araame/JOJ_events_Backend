@@ -1,41 +1,24 @@
 from .models import Evenement
 from rest_framework import serializers
 
-<<<<<<< HEAD
-
-class EvenementSerializer(serializers.ModelSerializer):
-    # discipline = serializers.CharField(
-    #     source = 'categorie.discipline.nom',
-    #     read_only = True),
-    # site = serializers.CharField(
-    #     source = 'site.nom',
-    # )
-    class Meta:
-        model = Evenement
-        fields = ['titre','description','image','categorie','date','heure', 'site']
-
-
-class DetailEventSerializer(serializers.ModelSerializer):
-=======
 #serializer pour afficher la carte des events
 class EvenementListSerializer(serializers.ModelSerializer):
     discipline = serializers.CharField(
         source = 'categorie.discipline.nom',
-        read_only = True),
+        read_only = True)
     site = serializers.CharField(
         source = 'site.nom',
         read_only = True
     )
     class Meta:
-        models = Evenement
+        model = Evenement
         fields = ['image','discipline','categorie','date','heure','site']
   
 #serializer pour l ajout des events ,la modification et details d un event     
 class EvenementSerializer(serializers.ModelSerializer):
->>>>>>> origin/feature/events-api
     class Meta:
-        models = Evenement
-        fields = '__All__'
+        model = Evenement
+        fields = '__all__'
         
 from .models import Discipline, Categorie
 # Critères d'acceptation
@@ -160,7 +143,6 @@ class DisciplineSerializer(serializers.ModelSerializer):
     class Meta:
         model = Discipline
         fields = ['id', 'nom', 'regle', 'accessibilite', 'categories']
-        fields = ['id', 'nom', 'regle', 'accessibilite', 'categories']
 
     def validate_nom(self, value):
         """ Unicité du nom et nettoyage des espaces """
@@ -174,6 +156,7 @@ class DisciplineSerializer(serializers.ModelSerializer):
 
         if not nom_nettoye[0].isalnum():
             raise serializers.ValidationError("Le nom de la discipline doit commencer par une lettre ou un chiffre valide.")
+    
     def get_nombre_competiteurs(self, obj):
         """ Compte le total des compétiteurs dans toutes les catégories de la discipline """
         return sum(cat.competiteurs.count() for cat in obj.categories.all())
@@ -198,4 +181,4 @@ class DisciplineSerializer(serializers.ModelSerializer):
         if queryset.filter(nom__iexact=nom_nettoye).exists():
             raise serializers.ValidationError(f"Une discipline nommée '{nom_nettoye}' existe déjà.")
 
-        return nom_nettoye        
+        return nom_nettoye
