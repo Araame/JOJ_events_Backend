@@ -1,9 +1,8 @@
 from rest_framework.routers import DefaultRouter
-from .views import Evenements
 
 
 
-from .views import DisciplineViewSet, CategorieViewSet
+from .views import DisciplineViewSet, CategorieViewSet, Evenement
 
 # evenements/urls.py
 from django.urls import path, include
@@ -15,7 +14,7 @@ router.register(r'disciplines', DisciplineViewSet, basename='discipline')
 router.register(r'categories', CategorieViewSet, basename='categorie')
 router.register(r'joueurs', JoueurViewSet, basename='joueur')
 router.register(r'equipes', EquipeViewSet, basename='equipe')
-router.register('events', Evenements, basename='events')
+router.register('events', Evenement, basename='events')
 
 
 

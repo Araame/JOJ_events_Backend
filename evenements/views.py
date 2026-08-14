@@ -1,3 +1,7 @@
+from django.shortcuts import render
+from rest_framework import viewsets
+from .models import Evenement
+from .serializers import EvenementSerializer,EvenementListSerializer
 
 from rest_framework import viewsets, permissions, serializers
 from rest_framework.decorators import action
@@ -65,6 +69,25 @@ class JoueurViewSet(ModelViewSet):
         else:
             permission_classes=[permissions.IsAdminUser]
         return[permission() for permission in permission_classes]        
+class Evenements(viewsets.ModelViewSet):
+    queryset = Evenement.objects.all()
+    def get_serializer_class(self):
+        #get
+        if self.action =='list':
+            return EvenementListSerializer
+        # POST, GET détail, PUT, PATCH
+        return EvenementSerializer
+    
+    
+    
+    permission_classes = [IsAdminOrReadOnly]
+    #systeme de filtrage
+    filter_backends = [DjangoFilterBackend]
+    # regle de filtrage
+    filterset_class = EventFiltre
+    #pagination
+    pagination_class = EvenementPagination
+        
         
 
 class ResultatViewSet(ModelViewSet):
