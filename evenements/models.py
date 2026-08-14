@@ -23,7 +23,7 @@ class Categorie(models.Model):
 class Competiteur(models.Model):
   categorie = models.ForeignKey(Categorie, on_delete=models.CASCADE, related_name='competiteurs')
   statut = models.BooleanField(default=True)
-  pays = models.CharField(max_length=2, choices=Pays.choices, default=Pays.SENEGAL)
+  pays = models.CharField(max_length=2, choices=Pays.choices)
   image = models.ImageField(upload_to='competiteurs/',blank=True, null=True)
 
 

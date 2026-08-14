@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Evenement
+from .models import Evenement, Equipe, Joueur, Resultat
 from .serializers import EvenementSerializer,EvenementListSerializer
 
 from rest_framework import viewsets, permissions, serializers
@@ -9,6 +9,9 @@ from rest_framework.response import Response
 from .models import Discipline, Categorie
 from .serializers import DisciplineSerializer, CategorieSerializer
 from django_filters.rest_framework import DjangoFilterBackend
+from .permissions import IsAdminOrReadOnly
+from .eventFiltre import EventFiltre
+from .pagination import EvenementPagination
 
 
 
@@ -17,7 +20,6 @@ from rest_framework import permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import Resultat, Evenement, Equipe,  Joueur
 from .serializers import ResultatSerializer, EquipeSerializer, JoueurSerializer
 
 
