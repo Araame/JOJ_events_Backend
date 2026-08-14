@@ -1,12 +1,11 @@
 from rest_framework.serializers import ModelSerializer
 from .models import Actualite
 from rest_framework import serializers
-from .models import Actualite
 from evenements.models import Evenement
 from django.utils import timezone
-MIN_TITLE_LENGTH = 5
-MAX_TITLE_LENGTH = 200
-MIN_DESCRIPTION_LENGTH = 20
+from validators import validate_text_quality, MIN_TITLE_LENGTH ,MAX_TITLE_LENGTH , MIN_DESCRIPTION_LENGTH
+
+
 
 class ActualiteSerializer(ModelSerializer):
     
@@ -24,7 +23,7 @@ class ActualiteSerializer(ModelSerializer):
             raise serializers.ValidationError(
                 f"Le titre ne peut pas dépasser {MAX_TITLE_LENGTH} caractères."
             )
-        
+        validate_text_quality(value, field_label="Le titre")
         return value
     
     def validate_description(self, value):
@@ -36,7 +35,8 @@ class ActualiteSerializer(ModelSerializer):
             raise serializers.ValidationError(
                 f"La description doit contenir au moins {MIN_DESCRIPTION_LENGTH} caractères."
             )
-        
+        validate_text_quality(value, field_label="La description")
+
         return value
     
     def validate_evenement_lie(self, value):
@@ -46,7 +46,8 @@ class ActualiteSerializer(ModelSerializer):
         
         if not Evenement.objects.filter(id=value.id).exists():
             raise serializers.ValidationError("L'événement spécifié n'existe pas.")
-        
+
+
         return value
     
     def validate_date_publication(self, value):
