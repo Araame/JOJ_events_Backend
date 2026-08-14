@@ -17,8 +17,8 @@ urlpatterns = [
 
     path("api-auth/", include("rest_framework.urls")),
     path('api/', include('evenements.urls')),  
-     path('api/', include(notifications_urls)),
-    
+    # path("api-auth/", include("rest_framework.urls")),
+    path('api/', include("actualites.urls")),
 
 
     # Configuration urls pour application SITE
