@@ -44,10 +44,17 @@ class Evenement(models.Model):
   description = models.TextField(blank=True)
   image = models.ImageField(upload_to='evenements/', blank=True, null=True)
 
+  def __str__(self):
+    return self.titre
+
 
 class Resultat(models.Model):
     evenement = models.ForeignKey(Evenement, on_delete=models.CASCADE, related_name='resultat')
     score = models.CharField(max_length=255)
     createur = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,  related_name='resultats_crees')
     competiteur = models.ForeignKey(Competiteur, on_delete=models.CASCADE, blank=True, null=True)
+
+    def __str__(self):
+      return f"Résultat {self.score} — {self.evenement}"
+
 

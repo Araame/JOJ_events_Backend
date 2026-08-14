@@ -1,4 +1,3 @@
-# paiements/signals.py
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
@@ -21,20 +20,38 @@ def _notifier_superadmins(objet, contenu):
         )
 
 
-def _envoyer_confirmation_spectateur(payment):
-    """Email + notification DB pour le spectateur (paiement réussi)."""
-    billet = payment.billet
+@receiver(post_save, sender=Payment)
+def on_payment_reussi(sender, instance, created, **kwargs):
+    """
+    Notifie uniquement lors d'une transition INTENTIONNELLE vers REUSSI.
+    Le flag statut_mis_a_jour est auto-éteint après usage : une
+    re-sauvegarde ultérieure ne renvoie jamais de doublon.
+    """
+    if instance.statut != StatutPaiement.REUSSI:
+        return
+    if created:
+        return
+
+    # Consommer le flag (True la 1re fois, puis il disparaît)
+    intentionnelle = getattr(instance, 'statut_mis_a_jour', False)
+    if intentionnelle:
+        delattr(instance, 'statut_mis_a_jour')   # ← éteindre le flag
+    else:
+        return   # pas une transition intentionnelle → silence
+
+    # --- Envoi des notifications ---
+    billet = instance.billet
     spectateur = billet.spectateur
-    transaction_obj = billet.transaction
     evenement = billet.evenement
+    transaction_obj = billet.transaction
 
     objet = "JOJ Dakar 2026 — Confirmation de paiement"
     contenu = (
         f"Bonjour {spectateur.prenom},\n\n"
-        f"Votre paiement de {payment.montant} FCFA "
-        f"(méthode : {payment.get_methode_display()}) a réussi.\n\n"
-        f"Transaction n° {transaction_obj.numero_transaction}\n"
-        f"Événement : {evenement}\n"
+        f"Votre paiement de {instance.montant} FCFA "
+        f"(méthode : {instance.get_methode_display()}) a réussi.\n\n"
+        f"Transaction n° {transaction_obj.numero_transaction if transaction_obj else 'N/A'}\n"
+        f"Événement : {evenement.titre}\n"
         f"Billet : {billet.get_type_billet_display()}\n"
         f"Code d'accès : {billet.code_unique}\n\n"
         f"Conservez ce code, il vous sera demandé à l'entrée du site.\n"
@@ -59,23 +76,12 @@ def _envoyer_confirmation_spectateur(payment):
     except Exception:
         pass
 
-
-@receiver(post_save, sender=Payment)
-def on_payment_reussi(sender, instance, created, **kwargs):
-    """Notifie uniquement quand le statut devient (ou reste) REUSSI,
-    mais pas lors de la création initiale en EN_COURS."""
-    if instance.statut != StatutPaiement.REUSSI:
-        return
-    if created:
-        return  # créé en EN_COURS dans la vue, on attend le passage à REUSSI
-
-    _envoyer_confirmation_spectateur(instance)
     _notifier_superadmins(
-        objet=f"[Paiement] Paiement réussi — {instance.billet.spectateur}",
+        objet=f"[Paiement] Paiement réussi — {spectateur}",
         contenu=(
-            f"Le spectateur {instance.billet.spectateur} a payé "
+            f"Le spectateur {spectateur} a payé "
             f"{instance.montant} FCFA via {instance.get_methode_display()} "
-            f"pour '{instance.billet.evenement}'. "
-            f"Billet validé : {instance.billet.code_unique}."
+            f"pour '{evenement.titre}'. "
+            f"Billet validé : {billet.code_unique}."
         ),
     )
