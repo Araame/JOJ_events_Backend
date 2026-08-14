@@ -7,7 +7,7 @@ from .models import Personnel, Admin, Superadmin
 @admin.register(Personnel)
 class PersonnelAdmin(UserAdmin):
     """
-    Administration complète du personnel JOJ.
+    Administration complete du personnel JOJ.
     """
     list_display = (
         'get_username', 'get_email', 'get_prenom', 'get_nom',
@@ -17,12 +17,12 @@ class PersonnelAdmin(UserAdmin):
     search_fields = ('username', 'email', 'first_name', 'last_name')
 
     fieldsets = UserAdmin.fieldsets + (
-        ('Informations JOJ', {'fields': ('role', 'tel')}),
+        ('Informations JOJ', {'fields': ('role', 'tel', 'permissions_app')}),
     )
     
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Informations personnelles', {'fields': ('first_name', 'last_name', 'email')}),
-        ('Informations JOJ', {'fields': ('role', 'tel')}),
+        ('Informations JOJ', {'fields': ('role', 'tel', 'permissions_app')}),
     )
 
     
@@ -36,7 +36,7 @@ class PersonnelAdmin(UserAdmin):
 
     def get_prenom(self, obj):
         return obj.first_name
-    get_prenom.short_description = "Prénom"
+    get_prenom.short_description = "Prenom"
 
     def get_nom(self, obj):
         return obj.last_name
@@ -44,15 +44,15 @@ class PersonnelAdmin(UserAdmin):
 
     def get_role(self, obj):
         return obj.get_role_display()
-    get_role.short_description = "Rôle"
+    get_role.short_description = "Role"
 
     def get_tel(self, obj):
         return obj.tel or "—"
-    get_tel.short_description = "Téléphone"
+    get_tel.short_description = "Telephone"
 
     def get_est_membre(self, obj):
         return "Oui" if obj.is_staff else "Non"
-    get_est_membre.short_description = "Accès back-office"
+    get_est_membre.short_description = "Acces back-office"
 
     def get_date_inscription(self, obj):
         return obj.date_joined.strftime("%d/%m/%Y %H:%M")
@@ -62,14 +62,14 @@ class PersonnelAdmin(UserAdmin):
 @admin.register(Admin)
 class AdminProxyAdmin(UserAdmin):
     """
-    Vue dédiée aux administrateurs (rôle limité).
-    Affiche uniquement les utilisateurs avec le rôle ADMIN.
+    Vue dediee aux administrateurs (role limite).
+    Affiche uniquement les utilisateurs avec le role ADMIN.
     """
-    list_display = ('get_username', 'get_email', 'get_prenom', 'get_nom')
+    list_display = ('get_username', 'get_email', 'get_prenom', 'get_nom', 'get_permissions')
 
     add_fieldsets = UserAdmin.add_fieldsets + (
         ('Informations personnelles', {'fields': ('first_name', 'last_name', 'email')}),
-        ('Informations JOJ', {'fields': ('role', 'tel')}),
+        ('Informations JOJ', {'fields': ('role', 'tel', 'permissions_app')}),
     )
 
     def get_username(self, obj):
@@ -82,11 +82,15 @@ class AdminProxyAdmin(UserAdmin):
 
     def get_prenom(self, obj):
         return obj.first_name
-    get_prenom.short_description = "Prénom"
+    get_prenom.short_description = "Prenom"
 
     def get_nom(self, obj):
         return obj.last_name
     get_nom.short_description = "Nom"
+
+    def get_permissions(self, obj):
+        return ", ".join(obj.permissions_app) if obj.permissions_app else "Aucune"
+    get_permissions.short_description = "Permissions"
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -96,8 +100,8 @@ class AdminProxyAdmin(UserAdmin):
 @admin.register(Superadmin)
 class SuperadminProxyAdmin(UserAdmin):
     """
-    Vue dédiée aux super-administrateurs (tous les pouvoirs).
-    Affiche uniquement les utilisateurs avec le rôle SUPERADMIN.
+    Vue dediee aux super-administrateurs (tous les pouvoirs).
+    Affiche uniquement les utilisateurs avec le role SUPERADMIN.
     """
     list_display = ('get_username', 'get_email', 'get_prenom', 'get_nom')
 
@@ -116,7 +120,7 @@ class SuperadminProxyAdmin(UserAdmin):
 
     def get_prenom(self, obj):
         return obj.first_name
-    get_prenom.short_description = "Prénom"
+    get_prenom.short_description = "Prenom"
 
     def get_nom(self, obj):
         return obj.last_name
