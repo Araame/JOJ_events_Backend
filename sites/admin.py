@@ -22,3 +22,4 @@ class ZoneAdmin(admin.ModelAdmin):
     list_display = ('nom', 'site', 'capacite')
     list_filter = ('site', 'nom')
     search_fields = ('nom',)
+# Register your models here.
