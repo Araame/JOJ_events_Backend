@@ -1,56 +1,99 @@
-from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from .models import Site, Zone
-
-# Create your views here.
 
 
 class SiteSerializer(serializers.ModelSerializer):
-    """Serializer pour site"""
-    class Meta :
+    """Serializer de gestion des sites sportifs."""
+
+    class Meta:
         model = Site
         fields = '__all__'
+        # Unicité du nom au niveau base (protection supplémentaire)
+        extra_kwargs = {
+            'nom': {'error_messages': {
+                'unique': 'Un site portant ce nom existe déjà.',
+            }},
+        }
 
-    def valider_nom(self, nom):
-        """Valide le nom avant l'enregistrement dans la base de données"""
-        site = Site.objects.filter(nom = nom).first()
-        if site : 
-            raise ValidationError("Ce site existe déjà en base de données")
-        return 
+    def validate_nom(self, nom):
+        """Unicité du nom de site (insensible à la casse, espaces nettoyés)."""
+        nom_nettoye = nom.strip()
 
+        if not nom_nettoye:
+            raise serializers.ValidationError(
+                "Le nom du site ne peut pas être vide."
+            )
 
-    def valider_site(self, data):
-        """Valide le site avant la sauvegarde en BD"""
-        if len(data["nom"]) > 255 : 
-            raise ValidationError("Le nom du site ne doit pas dépasser 255 caractères.")
-        if len(data["ville"]) > 100 : 
-            raise ValidationError("La ville du site ne doit pas dépasser 100 caractères.")
-        if len(data["region"]) > 100 : 
-            raise ValidationError("La ville du site ne doit pas dépasser 100 caractères.")
+        # Un nom composé uniquement d'espaces est refusé
+        if len(nom_nettoye) < 2:
+            raise serializers.ValidationError(
+                "Le nom du site doit comporter au moins 2 caractères."
+            )
+
+        queryset = Site.objects.all()
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+
+        if queryset.filter(nom__iexact=nom_nettoye).exists():
+            raise serializers.ValidationError(
+                f"Un site nommé '{nom_nettoye}' existe déjà."
+            )
+
+        return nom_nettoye
+
+    def validate(self, data):
+        """Cohérence globale : latitude/longitude doivent être renseignées ensemble."""
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+
+        if (latitude is None) != (longitude is None):
+            raise serializers.ValidationError(
+                "La latitude et la longitude doivent être fournies ensemble."
+            )
         return data
 
-class ZoneSerializer(ModelSerializer):
-    """Serializer pour Zone"""
 
-    class Meta : 
+class ZoneSerializer(serializers.ModelSerializer):
+    """Serializer de gestion des zones d'un site."""
+
+    class Meta:
         model = Zone
         fields = '__all__'
 
+    def validate_nom(self, nom):
+        """Nom de zone non vide."""
+        nom_nettoye = nom.strip()
 
-    def valider_zone(self, data):
-        """Valider une zone avant la sauegarde dans la base de données"""
-        if len(data["nom"]) > 100 : 
-            raise ValidationError("Le nom de la zone ne doit pas dépasser 100 caractères.")
-        return data
+        if not nom_nettoye:
+            raise serializers.ValidationError(
+                "Le nom de la zone ne peut pas être vide."
+            )
 
+        if len(nom_nettoye) < 2:
+            raise serializers.ValidationError(
+                "Le nom de la zone doit comporter au moins 2 caractères."
+            )
 
+        return nom_nettoye
 
     def validate(self, data):
-        """Vérifie si une zone n'existe pas pour ce site"""
-        if Zone.objects.filter(site=data["site"], nom=data["nom"]).exists():
-            raise ValidationError({"Une zone de type '{}' existe déjà pour ce site. ""Il ne peut y avoir qu'une seule zone de ce type par site.".format(data["nom"])})
+        """Unicité du nom de zone par site."""
+        nom = data.get('nom', '').strip()
+        site = data.get('site') or getattr(self.instance, 'site', None)
+
+        if not site or not nom:
+            return data
+
+        queryset = Zone.objects.filter(site=site, nom__iexact=nom)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+
+        if queryset.exists():
+            raise serializers.ValidationError({
+                'nom': (
+                    f"Une zone nommée '{nom}' existe déjà sur le site "
+                    f"'{site.nom}'."
+                ),
+            })
 
         return data
-
-
