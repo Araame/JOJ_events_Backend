@@ -1,56 +1,44 @@
-from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 from .models import Site, Zone
 
 # Create your views here.
-
+class ZoneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Zone
+        fields = ['id', 'nom']  
 
 class SiteSerializer(serializers.ModelSerializer):
-    """Serializer pour site"""
-    class Meta :
+    zones = ZoneSerializer(many=True, read_only=True) 
+
+    class Meta:
         model = Site
-        fields = '__all__'
+        fields = '__all__'  
 
-    def valider_nom(self, nom):
-        """Valide le nom avant l'enregistrement dans la base de données"""
-        site = Site.objects.filter(nom = nom).first()
-        if site : 
-            raise ValidationError("Ce site existe déjà en base de données")
-        return 
+    def create(self, validated_data):
+        zones_data = validated_data.pop('zones', [])
+        
+        # Créer le site
+        site = Site.objects.create(**validated_data)
+        
+        # Créer les zones associées
+        for zone_data in zones_data:
+            Zone.objects.create(site=site, **zone_data)
+            
+        return site
 
-
-    def valider_site(self, data):
-        """Valide le site avant la sauvegarde en BD"""
-        if len(data["nom"]) > 255 : 
-            raise ValidationError("Le nom du site ne doit pas dépasser 255 caractères.")
-        if len(data["ville"]) > 100 : 
-            raise ValidationError("La ville du site ne doit pas dépasser 100 caractères.")
-        if len(data["region"]) > 100 : 
-            raise ValidationError("La ville du site ne doit pas dépasser 100 caractères.")
-        return data
-
-class ZoneSerializer(ModelSerializer):
-    """Serializer pour Zone"""
-
-    class Meta : 
-        model = Zone
-        fields = '__all__'
-
-
-    def valider_zone(self, data):
-        """Valider une zone avant la sauegarde dans la base de données"""
-        if len(data["nom"]) > 100 : 
-            raise ValidationError("Le nom de la zone ne doit pas dépasser 100 caractères.")
-        return data
-
-
-
-    def validate(self, data):
-        """Vérifie si une zone n'existe pas pour ce site"""
-        if Zone.objects.filter(site=data["site"], nom=data["nom"]).exists():
-            raise ValidationError({"Une zone de type '{}' existe déjà pour ce site. ""Il ne peut y avoir qu'une seule zone de ce type par site.".format(data["nom"])})
-
-        return data
-
-
+    def update(self, instance, validated_data):
+        # Récupérer les nouvelles données des zones
+        zones_data = validated_data.pop('zones', None)
+        
+        # Mise à jour simple du site
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Mise à jour des zones 
+        if zones_data is not None:
+            instance.zone_set.all().delete()
+            for zone_data in zones_data:
+                Zone.objects.create(site=instance, **zone_data)
+                
+        return instance

@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'drf_yasg',
+    'django_filters',
     
     # Applications JOJ_EVENT
     'utilisateurs',   
