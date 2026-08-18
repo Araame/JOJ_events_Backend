@@ -78,7 +78,7 @@ class UtilisateurSerializer(serializers.ModelSerializer):
     class Meta:
         model = Utilisateur
         fields = ('id', 'username', 'email', 'first_name', 'last_name', 'tel', 'role', 
-                  'permissions_app', 'date_joined', 'last_login', 'is_active')
+                   'date_joined', 'last_login', 'is_active')
         extra_kwargs = {
             'username': {'required': False},
             'email': {'required': False},

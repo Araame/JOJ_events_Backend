@@ -37,11 +37,11 @@ class Personnel(AbstractUser):
         choices=RolePersonnel.choices,
         default=RolePersonnel.ADMIN
     )
-    permissions_app = models.JSONField(
-        default=list,
-        blank=True,
-        help_text="Liste des permissions de l'utilisateur"
-    )
+    # permissions_app = models.JSONField(
+    #     default=list,
+    #     blank=True,
+    #     help_text="Liste des permissions de l'utilisateur"
+    # )
 
     objects = PersonnelManager()
 

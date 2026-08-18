@@ -30,7 +30,6 @@ INSTALLED_APPS = [
     # Librairies tierces
     'corsheaders',
     'drf_yasg',
-    'django_filters',
     
     
 
