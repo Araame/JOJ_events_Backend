@@ -41,7 +41,7 @@ class EquipeViewSet(ModelViewSet):
         """    
         equipe= get_object_or_404(Equipe, id=id)
 
-        evenements= equipe.evenements.all()
+        evenements= Evenement.objects.filter(categorie=equipe.categorie)
 
         data=[
             {
@@ -270,25 +270,27 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .pagination import EvenementPagination
 from .permissions import IsAdminOrReadOnly
 
-class Evenements(viewsets.ModelViewSet):
-    queryset = Evenement.objects.all()
-    def get_serializer_class(self):
-        #get
-        if self.action =='list':
-            return EvenementListSerializer
-        # POST, GET détail, PUT, PATCH
-        return EvenementSerializer
-    
-    
-    
-    permission_classes = [IsAdminOrReadOnly]
-    #systeme de filtrage
+class EvenementViewSet(viewsets.ModelViewSet):
+    """
+    CRUD des événements : lecture publique, écriture réservée au personnel.
+    """
+    queryset = Evenement.objects.all().select_related('site', 'categorie__discipline')
+    serializer_class = EvenementSerializer
+
+        #systeme de filtrage
     filter_backends = [DjangoFilterBackend]
     # regle de filtrage
     filterset_class = EventFiltre
     #pagination
     pagination_class = EvenementPagination
-        
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [IsAdminPersonnel]
+        else:
+            permission_classes = [permissions.AllowAny]
+        return [permission() for permission in permission_classes]
+
         
     
     
