@@ -1,0 +1,61 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
+.env
+__pycache__/
+*.pyc
+db.sqlite3
+debug.log
+.venv/
+
+env
+venv
+=======
+=======
+>>>>>>> origin/feature/authentification
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.sqlite3
+db.sqlite3
+
+# Virtual Environment
+.venv/
+env
+
+
+# Django
+/media/
+/static/
+*.log
+*.pot
+*.mo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Migrations (optionnel - à commenter si vous voulez versionner les migrations)
+# */migrations/*.py
+# !*/migrations/__init__.py
+<<<<<<< HEAD
+>>>>>>> origin/feature/authentification
+=======
+
+# Rapports de tests
+reports/
+htmlcov/
+.coverage
+.pytest_cache/>>>>>>> origin/feature/authentification
