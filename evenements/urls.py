@@ -2,7 +2,7 @@ from rest_framework.routers import DefaultRouter
 
 
 
-from .views import DisciplineViewSet, CategorieViewSet,Evenements,JoueurViewSet, ResultatViewSet, EquipeViewSet
+from .views import DisciplineViewSet, CategorieViewSet,EvenementViewSet,JoueurViewSet, ResultatViewSet, EquipeViewSet
 
 # evenements/urls.py
 from django.urls import path, include
@@ -13,7 +13,7 @@ router.register(r'disciplines', DisciplineViewSet, basename='discipline')
 router.register(r'categories', CategorieViewSet, basename='categorie')
 router.register(r'joueurs', JoueurViewSet, basename='joueur')
 router.register(r'equipes', EquipeViewSet, basename='equipe')
-router.register('events', Evenements, basename='events')
+router.register('events', EvenementViewSet, basename='events')
 
 
 
