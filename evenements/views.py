@@ -162,10 +162,6 @@ class JoueurViewSet(ModelViewSet):
 
 
 
-from django.shortcuts import render
-from rest_framework import viewsets
-from .models import Evenement
-from .serializers import EvenementSerializer,EvenementListSerializer
 
 from .eventFiltre import EventFiltre
 from django_filters.rest_framework import DjangoFilterBackend
@@ -195,3 +191,40 @@ class EvenementViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]
+
+class ResultatViewSet(ModelViewSet):
+   queryset=Resultat.objects.all().select_related(
+   'evenement',
+   'competiteur',
+   'createur')
+
+
+   serializer_class= ResultatSerializer
+   
+   # Configuration du filtrage avec django-filter 
+   filter_backends = [DjangoFilterBackend]
+   filterset_fields = ['evenement', 
+                     'competiteur',
+                     'competiteur__equipe', # GET /api/resultats/?competiteur__equipe__1
+                     'competiteur__joueur', # heritage
+                     ]
+
+
+   def get_permissions(self):
+
+
+       if self.action in ['list', 'retrieve']:
+           permission_classes=[permissions.AllowAny]
+       else:
+           permission_classes=[permissions.IsAdminUser]
+
+
+       return [permission() for permission in permission_classes] 
+
+
+   def perform_create(self, serializer):
+       """
+       Appelée lors de la création (POST).
+       Ajoute automatiquement l'utilisateur connecté comme createur.
+       """  
+       serializer.save(createur=self.request.user)
