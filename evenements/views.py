@@ -183,7 +183,7 @@ class DisciplineViewSet(viewsets.ModelViewSet):
 
 
 
-class CategorieViewSet(viewsets.ReadOnlyModelViewSet):
+class CategorieViewSet(viewsets.ModelViewSet):
     """
     CRUD des résultats :
     - Lecture publique avec filtrage (événement, compétiteur, équipe, joueur)
@@ -270,7 +270,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .pagination import EvenementPagination
 from .permissions import IsAdminOrReadOnly
 
-class Evenements(viewsets.ModelViewSet):
+class EvenementViewSet(viewsets.ModelViewSet):
     queryset = Evenement.objects.all()
     def get_serializer_class(self):
         #get

@@ -13,7 +13,7 @@ router.register(r'disciplines', DisciplineViewSet, basename='discipline')
 router.register(r'categories', CategorieViewSet, basename='categorie')
 router.register(r'joueurs', JoueurViewSet, basename='joueur')
 router.register(r'equipes', EquipeViewSet, basename='equipe')
-router.register('events', EvenementViewSet, basename='events')
+router.register(r'events', EvenementViewSet, basename='events')
 
 
 
