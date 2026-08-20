@@ -101,7 +101,13 @@ class CategorieViewSet(viewsets.ModelViewSet):
 # ---------------------------------------------------------------------------
 # Résultats
 # ---------------------------------------------------------------------------
-class ResultatViewSet(ModelViewSet):
+
+class CategorieViewSet(viewsets.ModelViewSet):
+    """
+    CRUD des résultats :
+    - Lecture publique avec filtrage (événement, compétiteur, équipe, joueur)
+    - Écriture réservée au personnel ; le créateur est renseigné automatiquement
+    """
     queryset = Resultat.objects.all().select_related(
         'evenement',
         'competiteur',
@@ -172,15 +178,30 @@ class JoueurViewSet(ModelViewSet):
         return [permission() for permission in permission_classes]
 
 
-# ---------------------------------------------------------------------------
-# Événements
-# ---------------------------------------------------------------------------
+
+from django.shortcuts import render
+from rest_framework import viewsets
+from .models import Evenement
+from .serializers import EvenementSerializer,EvenementListSerializer
+
+from .eventFiltre import EventFiltre
+from django_filters.rest_framework import DjangoFilterBackend
+from .pagination import EvenementPagination
+from .permissions import IsAdminOrReadOnly
+
 class EvenementViewSet(viewsets.ModelViewSet):
-    """
-    CRUD des événements : lecture publique, écriture réservée au personnel.
-    """
-    queryset = Evenement.objects.all().select_related('site', 'categorie__discipline')
-    serializer_class = EvenementSerializer
+    queryset = Evenement.objects.all()
+    def get_serializer_class(self):
+        #get
+        if self.action =='list':
+            return EvenementListSerializer
+        # POST, GET détail, PUT, PATCH
+        return EvenementSerializer
+    
+    
+    
+    permission_classes = [IsAdminOrReadOnly]
+    #systeme de filtrage
     filter_backends = [DjangoFilterBackend]
     filterset_class = EventFiltre
     pagination_class = EvenementPagination

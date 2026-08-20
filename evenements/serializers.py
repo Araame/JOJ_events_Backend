@@ -16,9 +16,32 @@ class EvenementListSerializer(serializers.ModelSerializer):
   
 #serializer pour l ajout des events ,la modification et details d un event     
 class EvenementSerializer(serializers.ModelSerializer):
+    categorie_nom = serializers.CharField(
+        source='categorie.nom',
+        read_only=True
+    )
+
+    categorie_discipline_nom = serializers.CharField(
+            source = 'categorie.discipline.nom',
+            read_only = True)
+    
+    site_nom = serializers.CharField(
+        source='site.nom',
+        read_only=True
+    )
     class Meta:
         model = Evenement
-        fields = '__all__'
+        fields = [ 'id',
+            'titre',
+            'date',
+            'heure',
+            'site',
+            'site_nom',
+            'categorie',
+            'categorie_nom',
+            'description',
+            'image',
+            'categorie_discipline_nom']
         
 from .models import Discipline, Categorie
 # Critères d'acceptation
@@ -139,10 +162,15 @@ class DisciplineSerializer(serializers.ModelSerializer):
     Serializer pour afficher une discipline avec ses catégories et le nombre de compétiteurs.
     """
     categories = CategorieSerializer(many=True, read_only=True)
+    nombre_epreuves = serializers.SerializerMethodField()
 
     class Meta:
         model = Discipline
-        fields = ['id', 'nom', 'regle', 'accessibilite', 'categories']
+        fields = ['id', 'image' ,'nom', 'regle', 'accessibilite', 'categories','nombre_epreuves']
+    def get_nombre_epreuves(self, obj):
+        return Evenement.objects.filter(
+            categorie__discipline=obj
+        ).count()
 
     def validate_nom(self, value):
         """ Unicité du nom et nettoyage des espaces """
