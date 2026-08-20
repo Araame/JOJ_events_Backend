@@ -155,14 +155,18 @@ class DisciplineViewSet(viewsets.ModelViewSet):
     search_fields = ['nom']
 
     def get_permissions(self):
+        # 1. Action spécifique superadmin
         if self.action == 'export_disciplines':
             permission_classes = [IsSuperadminPersonnel]
-        # Toute action d'écriture exige un personnel authentifié
-        elif self.action in ['create', 'update', 'partial_update', 'delete', 'destroy']:
+        
+        # 2. Toutes les actions d'écriture (POST, PUT, PATCH, DELETE)
+        elif self.action in ['create', 'update', 'partial_update', 'destroy']:
             permission_classes = [IsAdminPersonnel]
-        # La lecture (list, retrieve, categories) est publique
+        
+        # 3. La lecture (list, retrieve, categories) est publique
         else:
             permission_classes = [permissions.AllowAny]
+            
         return [permission() for permission in permission_classes]
 
     @action(detail=True, methods=['get'], url_path='categories')
@@ -172,14 +176,6 @@ class DisciplineViewSet(viewsets.ModelViewSet):
         categories = Categorie.objects.filter(discipline=discipline)
         serializer = CategorieSerializer(categories, many=True)
         return Response(serializer.data)
-
-    def get_permissions(self):
-        """Toute action GET est publique, toute écriture exige l'authentification."""
-        if self.request.method in permissions.SAFE_METHODS:
-            permission_classes = [permissions.AllowAny]
-        else:
-            permission_classes = [permissions.IsAuthenticated]
-        return [permission() for permission in permission_classes]
 
 
 
