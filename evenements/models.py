@@ -9,9 +9,11 @@ class Pays(models.TextChoices):
   AUTRE = 'OT', 'Autre'
 
 class Discipline(models.Model):
+  image=models.ImageField( upload_to=None, height_field=None, width_field=None, max_length=None, blank=True, null=True)
   nom = models.CharField(max_length=100)
   regle = models.TextField(blank=True)
   accessibilite = models.TextField(blank=True)
+  
 
 
 class Categorie(models.Model):
