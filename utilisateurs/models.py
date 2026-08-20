@@ -7,18 +7,9 @@ class RolePersonnel(models.TextChoices):
 
 
 class PermissionApp(models.TextChoices):
-    EVENEMENTS = 'EVENEMENTS', 'Gestion des evenements'
-    ZONES = 'ZONES', 'Gestion des zones'
-    RESULTATS = 'RESULTATS', 'Gestion des resultats'
-    BILLETS = 'BILLETS', 'Gestion des billets'
-    PAIEMENTS = 'PAIEMENTS', 'Gestion des paiements'
-    ACTUALITES = 'ACTUALITES', 'Gestion des actualites'
-    SITES = 'SITES', 'Gestion des sites'
-    NOTIFICATIONS = 'NOTIFICATIONS', 'Gestion des notifications'
+    JEUX = 'JEUX', 'Gestion des jeux'
+    ACTUALITES = 'ACTUALITES', 'Gestion des actualites et résultats'
     UTILISATEURS = 'UTILISATEURS', 'Gestion des utilisateurs'
-    DISCIPLINES = 'DISCIPLINES', 'Gestion des disciplines'
-    CATEGORIES = 'CATEGORIES', 'Gestion des categories'
-    COMPETITEURS = 'COMPETITEURS', 'Gestion des competiteurs'
     TOUT = 'TOUT', 'Toutes les permissions'
 
 
